@@ -1,0 +1,852 @@
+%!TEX root = Slides.tex
+\part{Entwurfstheorie}
+
+\section{Problemstellung}
+
+\begin{frame}\frametitle{\insertsection}
+\begin{itemize}
+	\item Bisher: Top-Down-Entwurf: Von der Anforderungsanalyse \"uber das ERM zum relationalen Schema
+	\begin{itemize}
+		\item Oft Datenredundanz, hohe Anzahl Attribute in Tabellen, etc. in Kauf genommen
+		\item Oder zu viele schmale Relationen, Entit\"aten und Einheiten auseinandergebrochen, etc.
+	\end{itemize}
+  \pause
+  \abs
+	\item Besser: Konzeptuelle Feinabstimmung der erstellten relationalen Schemata
+	\begin{itemize}
+		\item Grundlage: Funktionale Abh\"angigkeiten und Schl\"ussel
+		\item Ziel: G\"utebestimmung und Anpassung der Relationenschemata mit Hilfe von Normalformen und Normalisierungsalgorithmen
+	\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\subsection{Breite Relationen}
+
+\begin{frame}[t]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+ 	\structure{Gegeben sei die folgende recht breite Relation:}
+ 	\begin{center}
+		\begin{tabular}{|c|c|c|c|c|c|}\hline
+			\multicolumn{6}{|c|}{\small \textbf{Mitarbeiter\_Projekt}}\\\hline\hline
+			 \small \textbf{\key{MANr}} & \small \textbf{Vorname}&\small \textbf{Nachname}&\textbf{\key{PNr}} &\small \textbf{Projektname}&\small \textbf{Funktion} \\\hline 
+			\small 1 &\small Max & \small Mustermann &\small 4711 &\small Entwicklung &\small Entwickler \\\hline 
+			\small 1 &\small Max & \small Mustermann &\small 4713 &\small Vertrieb & \small Kampagnen \\\hline 
+			\small 2 &\small Erika &\small Musterfrau &\small 4711 &\small Entwicklung &\small SCRUM Master \\\hline 
+			\small 2 &\small Erika &\small Musterfrau &\small 4712 &\small Test &\small Integrations-Tests \\\hline 
+			\small 3 &\small Moritz & \small Musterherr &\small 4713 &\small Research &\small Leitung \\\hline 
+		\end{tabular}
+	\end{center}
+	Relation hat einige problematische Eigenschaften, die zu \textit{Anomalien} führen können. 
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Redundanzproblem}
+\begin{center}
+	\begin{tabular}{|c|c|c|c|c|c|}\hline
+		\multicolumn{6}{|c|}{\small \textbf{Mitarbeiter\_Projekt}}\\\hline\hline
+		\small\textbf{\key{MANr}}&\small\textbf{Vorname}&\small\textbf{Nachname}&\textbf{\key{PNr}}&\small\textbf{Projektname}&\small\textbf{Funktion}\\\hline 
+		\small 1 &\small Max & \small Mustermann &\small 4711 &\small Entwicklung &\small Entwickler \\\hline 
+		\small \cellcolor{Red}1 &\small \cellcolor{Red}Max & \small \cellcolor{Red}Mustermann &\small 4713 
+		&\small Vertrieb & \small Kampagnen \\\hline 
+		\small 2 &\small Erika &\small Musterfrau &\small \cellcolor{Red}4711 &\small \cellcolor{Red}Entwicklung &\small SCRUM Master \\\hline 
+		\small \cellcolor{Red}2 &\small \cellcolor{Red}Erika &\small \cellcolor{Red}Musterfrau 
+		&\small 4712 &\small Test &\small Integrations-Tests \\\hline 
+		\small 3 &\small Moritz & \small Musterherr &\small 4714 &\small Research &\small Leitung \\\hline 
+	\end{tabular}
+\end{center} 	
+Datenredundanz: Werte müssen ggf.~mehrfach eingegeben werden
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Einf\"ugeanomalien}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}\hline
+	\multicolumn{6}{|c|}{\small \textbf{Mitarbeiter\_Projekt}}\\\hline\hline
+	\small\textbf{\key{MANr}}&\small\textbf{Vorname}&\small\textbf{Nachname}&\textbf{\key{PNr}}&\small\textbf{Projektname}&\small\textbf{Funktion}\\\hline 
+	\small 1 &\small Max & \small Mustermann &\small 4711 &\small Entwicklung &\small Entwickler \\\hline 
+	\small 1 &\small Max & \small Mustermann &\small 4713 &\small Vertrieb & \small Kampagnen \\\hline 
+	\small \cellcolor{red}\texttt{null} &\small \cellcolor{red}\texttt{null} & \small \cellcolor{red}\texttt{null}
+	&\small 4712 & \small Test &\small Unit-Tests \\\hline 		
+	\small 2 &\small Erika &\small Musterfrau &\small 4711 &\small Entwicklung &\small SCRUM Master \\\hline 
+	\small 2 &\small Erika &\small Musterfrau &\small 4712 &\small Test &\small Integrations-Tests \\\hline 
+	\small 3 &\small Moritz & \small Musterherr &\small 4714 &\small Research &\small Leitung \\\hline 
+\end{tabular}
+\end{center} 	
+\begin{itemize}
+\item Neues Projekt und neue Funktion ohne Zuordnung zu Mitarbeiter nicht möglich $\Rightarrow$ Primary Key Coinstraint
+\item Entsprechend: Neue Mitarbeiterin ohne Projekt-/Funktionszuordnung nicht möglich.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Einf\"ugeanomalien}
+\begin{center}
+	\begin{tabular}{|c|c|c|c|c|c|}\hline
+		\multicolumn{6}{|c|}{\small \textbf{Mitarbeiter\_Projekt}}\\\hline\hline
+		\small\textbf{\key{MANr}}&\small\textbf{Vorname}&\small\textbf{Nachname}&\textbf{\key{PNr}}&\small\textbf{Projektname}&\small\textbf{Funktion}\\\hline 
+		\small 1 &\small Max & \small Mustermann &\small 4711 &\small Entwicklung &\small Entwickler \\\hline 
+		\small 1 &\small Max & \small Mustermann &\small 4713 &\small Vertrieb & \small Kampagnen \\\hline 
+		\small 1 &\small Max & \small \cellcolor{red}Musterrann &\small 4712 & \small Test &\small Unit-Tests \\\hline 		
+		\small 2 &\small Erika &\small Musterfrau &\small 4711 &\small Entwicklung &\small SCRUM Master \\\hline 
+		\small 2 &\small Erika &\small Musterfrau &\small 4712 &\small Test &\small Integrations-Tests \\\hline 
+		\small 3 &\small Moritz & \small Musterherr &\small 4714 &\small Research &\small Leitung \\\hline 
+	\end{tabular}
+\end{center} 	
+\begin{itemize}
+	\item Wegen Redundanz h\"ohere Wahrscheinlichkeit von Dateninkonsistenz, bspwse.~durch Tippfehler.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Einf\"ugeanomalien}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}\hline
+\multicolumn{6}{|c|}{\small \textbf{Mitarbeiter\_Projekt}}\\\hline\hline
+\small\textbf{\key{MANr}}&\small\textbf{Vorname}&\small\textbf{Nachname}&\textbf{\key{PNr}}&\small\textbf{Projektname}&\small\textbf{Funktion}\\\hline 
+\small 1 &\small Max & \small Mustermann &\small 4711 &\small Entwicklung &\small Entwickler \\\hline 
+\small 1 &\small Max & \small Mustermann &\small 4713 &\small Vertrieb & \small Kampagnen \\\hline 
+\small 1 &\small Max & \small Mustermann &\small 4712 & \small Test &\small Unit-Tests \\\hline 		
+\small \cellcolor{red}1 &\small Max &\small Mustermann &\small \cellcolor{red}4712 &\small Test &\small Integrations-Tests \\\hline 
+\small 2 &\small Erika &\small Musterfrau &\small 4711 &\small Entwicklung &\small SCRUM Master \\\hline 
+\small 2 &\small Erika &\small Musterfrau &\small 4712 &\small Test &\small Integrations-Tests \\\hline 
+\small 3 &\small Moritz & \small Musterherr &\small 4714 &\small Research &\small Leitung \\\hline 
+\end{tabular}
+\end{center} 	
+\begin{itemize}
+\item Funktionserweiterung f\"ur Mitarbeiter im Projekt nicht m\"oglich $\Rightarrow$ Primary Key Coinstraint
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{L\"oschanomalien}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}\hline
+\multicolumn{6}{|c|}{\small \textbf{Mitarbeiter\_Projekt}}\\\hline\hline
+\small\textbf{\key{MANr}}&\small\textbf{Vorname}&\small\textbf{Nachname}&\textbf{\key{PNr}}&\small\textbf{Projektname}&\small\textbf{Funktion}\\\hline 
+\small 1 &\small Max & \small Mustermann &\small 4711 &\small Entwicklung &\small Entwickler \\\hline 
+\small 1 &\small Max & \small Mustermann &\small 4713 &\small Vertrieb & \small Kampagnen \\\hline 
+\small 1 &\small Max & \small Mustermann &\small 4712 & \small Test &\small Unit-Tests \\\hline 		
+\small 2 &\small Erika &\small Musterfrau &\small 4711 &\small Entwicklung &\small SCRUM Master \\\hline 
+\small 2 &\small Erika &\small Musterfrau &\small 4712 &\small Test &\small Integrations-Tests \\\hline 
+\small 3 &\small\sout{Moritz} & \small \sout{Musterherr} 
+&\small \cellcolor{Red}\sout{4714} &\small \cellcolor{Red}\sout{Research} &\small \cellcolor{Red}\sout{Leitung} \\\hline 
+\end{tabular}
+\end{center} 	
+\begin{itemize}
+\item L\"oschen eines Datensatzes vernichtet Informationen \"uber andere Sachverhalte/Entit\"aten.
+\item Beispiel: L\"oschen des Mitarbeiters in Projekt 4714 bedingt L\"oschen des Projektes.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+ 	\structure{Modifikationsanomalien}
+ 	\begin{center}
+ 		\begin{tabular}{|c|c|c|c|c|c|}\hline
+ 		 \multicolumn{6}{|c|}{\small \textbf{Mitarbeiter\_Projekt}}\\\hline\hline
+ 		 \small\textbf{\key{MANr}}&\small\textbf{Vorname}&\small\textbf{Nachname}&\textbf{\key{PNr}}&\small\textbf{Projektname}&\small\textbf{Funktion}\\\hline 
+ 		 \small 1 &\small Max & \small Mustermann &\small 4711 &\small Entwicklung &\small Entwickler \\\hline 
+ 		 \small 1 &\small Max & \small Mustermann &\small 4713 &\small Vertrieb & \small Kampagnen \\\hline 
+ 		 \small 1 &\small Max & \small Mustermann &\small 4712 & \small Test &\small Unit-Tests \\\hline 		
+ 		 \small 2 &\small Erika &\small Musterfrau &\small 4711 &\small Entwicklung &\small SCRUM Master \\\hline 
+ 		 \small 2 &\small Erika &\small \cellcolor{red}Mustermann &\small 4712 &\small Test &\small Integrations-Tests \\\hline 
+ 	  \end{tabular}
+	\end{center}
+	\begin{itemize}
+		\item \"Anderungen eines Attributwertes (z.B. Nachname von Frau Musterfrau) m\"ussen in allen Tupeln durchgef\"uhrt werden
+		\item Werden Tupel vergessen, entstehen inkonsistente Datenbest\"ande
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+ 	\structure{Die Relation nach ein paar Tagen im operativen Einsatz:}
+ 	\begin{center}
+		\begin{tabular}{|c|c|c|c|c|c|}\hline
+			\multicolumn{6}{|c|}{\small \textbf{Mitarbeiter\_Projekt}}\\\hline\hline
+			 \small \textbf{\key{MANr}} & \small \textbf{Vorname}&\small \textbf{Nachname}&\small\textbf{\key{PNr}} &\small \textbf{Projektname}&\small \textbf{Funktion} \\\hline 
+			\small 1 &\small Max &\small Mustermann &\small 4711 & \small Entwicklung &\small Entwickler \\\hline 
+			\small 1 &\small Max &\small \cellcolor{Red}Mustrmann &\small 4712 &\small Test &\small Unit-Tests \\\hline 
+			\small 2 &\small Erika &\small Musterfrau &\small 4711 & Entwicklung &\small SCRUM Master \\\hline 
+			\small 2 &\small Erika &\small \cellcolor{Red}Mustermann &\small 4712 &\small Test &\small Integrations-Tests \\\hline 
+			\cellcolor{Red}\small\sout{3} &\cellcolor{Red}\small\sout{Moritz}&\cellcolor{Red}\small\sout{Musterherr}
+			  &\cellcolor{Red}\small\sout{4714}&\cellcolor{Red}\small\sout{Research} & \cellcolor{Red}\small\sout{Leitung}\\\hline
+			\cellcolor{Yellow}\small 9999 &\cellcolor{Yellow}\small \texttt{null} &\cellcolor{Yellow} \texttt{null}
+			   &\cellcolor{Yellow}\small 4715 & \cellcolor{Yellow}\small App-Development  &\small \cellcolor{Yellow} Dokumentation  \\\hline 
+			\cellcolor{Yellow}\small 4 &\cellcolor{Yellow}\small Michael &\cellcolor{Yellow}\small Franke  
+			& \cellcolor{Yellow}\small 9999 & \cellcolor{Yellow}\small \texttt{null}  &\small \cellcolor{Yellow} \texttt{null}  \\\hline 
+		\end{tabular}
+	\end{center}	
+\end{frame}
+
+\subsection{Schmale Relationen}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Schema f\"ur Mitarbeiter- und Projektdaten in Form von schmalen Relationen:}
+\begin{center}
+	\begin{tabular}{|c|c|c|c|}\hline
+		\multicolumn{4}{|c|}{\small \textbf{Mitarbeiter}}\\\hline\hline
+		\small \textbf{\key{MANr}} & \small \textbf{Vorname}&\small \textbf{Nachname}&\textbf{\key{PNr}}\\\hline 
+		\small 1 &\small Max & \small Mustermann &\small 4711\\\hline 
+		\small 1 &\small Max & \small Mustermann &\small 4713\\\hline 
+		\small 2 &\small Erika &\small Musterfrau &\small 4711\\\hline 
+		\small 2 &\small Erika &\small Musterfrau &\small 4712\\\hline 
+		\small 3 &\small Moritz & \small Musterherr &\small 4713\\\hline 
+	\end{tabular}
+	\hspace{4mm}
+	\begin{tabular}{|c|c|c|}\hline
+		\multicolumn{3}{|c|}{\small \textbf{Projekt}}\\\hline\hline
+		\textbf{PNr} &\small \textbf{Projektname}&\small \textbf{Funktion} \\\hline 
+		\small 4711 &\small Entwicklung &\small Entwickler \\\hline 
+		\small 4713 &\small Vertrieb & \small Kampagnen \\\hline 
+		\small 4711 &\small Entwicklung &\small SCRUM Master \\\hline 
+		\small 4712 &\small Test &\small Integrations-Tests \\\hline 
+		\small 4713 &\small Research &\small Leitung \\\hline 
+	\end{tabular}
+\end{center}
+\begin{itemize}
+	\item Zusammenf\"uhrung (Join) der Einheiten kann zu unerw\"unschten Datens\"atzen f\"uhren.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Weiteres Beispiel: Schema f\"ur Mitarbeiterdaten mit vielen schmalen Relationen}
+\begin{center}
+	\begin{tabular}{|c|c|}\hline
+		\multicolumn{2}{|c|}{\small \textbf{MA\_Vorname}}\\\hline\hline
+		\small \textbf{\key{MANr}} & \small \textbf{Vorname}\\\hline 
+		\small 1 &\small Max \\\hline 
+		\small 2 &\small Erika \\\hline 
+	\end{tabular}
+	\hspace{4mm}
+	\begin{tabular}{|c|c|}\hline
+		\multicolumn{2}{|c|}{\small \textbf{MA\_Nachname}}\\\hline\hline
+		\small \textbf{\key{MANr}} & \small \textbf{Nachname}\\\hline 
+		\small 1 &\small Mustermann \\\hline 
+		\small 2 &\small Musterfrau \\\hline 
+	\end{tabular}
+	\abs
+	\begin{tabular}{|c|c|}\hline
+		\multicolumn{2}{|c|}{\small \textbf{MA\_PLZ}}\\\hline\hline
+		\small \textbf{\key{MANr}} & \small \textbf{PLZ}\\\hline 
+		\small 1 &\small 68165 \\\hline 
+		\small 2 &\small 76243 \\\hline 
+	\end{tabular}
+	\hspace{4mm}
+	\begin{tabular}{|c|c|}\hline
+		\multicolumn{2}{|c|}{\small \textbf{MA\_Ort}}\\\hline\hline
+		\small \textbf{\key{MANr}} & \small \textbf{Ort}\\\hline 
+		\small 1 &\small Mannheim \\\hline 
+		\small 2 &\small Karlsruhe \\\hline 
+	\end{tabular}
+	\hspace{4mm}
+	\begin{tabular}{|c|c|}\hline
+		\multicolumn{2}{|c|}{\small \textbf{MA\_Str}}\\\hline\hline
+		\small \textbf{\key{MANr}} & \small \textbf{Strasse}\\\hline 
+		\small 1 &\small Gartenstrasse \\\hline 
+		\small 2 &\small Hauptstrasse \\\hline 
+	\end{tabular}
+\end{center}
+\begin{itemize}
+	\item Objekt-Semantik auf mehrere Tabellen verteilt; zu viele Abh\"angigkeiten untereinander 
+	\item Hoher Aufwand, semantisch vollständige Daten zu erhalten: 
+	\nl
+	\texttt{MA\_Vorname} $\Join$ \texttt{MA\_Nachname}$\Join$ \texttt{MA\_PLZ} $\Join$ \texttt{MA\_Ort}$\Join$ \texttt{MA\_Str} 
+\end{itemize}
+\end{frame}
+
+\subsection{Fazit}
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\begin{block}{Zu breite Relationen}
+	\begin{itemize}
+		\item Sind abfragetechnisch einfach zu handhaben, leiden aber an Anomalien
+		\item Vermischung unterschiedlicher Entit\"aten in einer Relation f\"uhrt zu Unsauberkeiten
+	\end{itemize}
+\end{block}
+\pause
+\begin{block}{Zu schmale Relationen}
+	\begin{itemize}
+		\item Unhandlich, da zu viele Relationen gepflegt werden m\"ussen
+		\item Semantische Einheiten werden auseinander gebrochen und m\"ussen mit viel Aufwand wieder zusammengef\"ugt werden
+		\item Zusammenf\"uhrung der Einheiten kann zu unerw\"unschten Datens\"atzen f\"uhren
+	\end{itemize}
+\end{block}
+\pause
+\begin{block}{\textbf{Ziel}}
+	Finde Methodik und Systematik, um ein '\textit{gutes}' Datenmodell zu erstellen ...
+\end{block}
+\end{frame}
+
+\section{Normalformen}
+
+\subsection{Grundlagen}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\begin{definition}[Normalisierung]
+	Normalisierung ist ein Zerlegungsprozess eines Relationenschemas $\mcl{R}(\mcl{A})$ in mehrere Teilschemata 
+	$\mcl{R}_1(\mcl{A}_1),\mcl{R}_2(\mcl{A}_2),\dots ,\mcl{R}_n(\mcl{A}_n)$ mit $\bigcup_{i=1}^n\mcl{A}_i = \mcl{A}$. 
+	\abs
+	F\"ur eine solche Zerlegung m\"ussen zwei grundlegende Korrektheitskriterien erf\"ullt sein:\\[4pt]
+	\begin{enumerate}
+		\pause
+		\item \emph{Verlustlosigkeit}: Die Information einer beliebigen Relation $R$ des Schemas $\mcl{R}$ muss 
+		eineindeutig aus den entsprechenden Relationen $R_1,\ldots , R_n$ der Schemata 
+		$\mcl{R}_1,\dots ,\mcl{R}_n$ rekonstruierbar sein.\\[4pt]
+		\pause
+		\abs
+		\item \emph{Abh\"angigkeitserhaltung}: Die funktionalen Abh\"angigkeiten des Schemas $\mcl{R}$ und die 
+		funktionalen Abh\"angigkeiten der Schemata $\mcl{R}_1,\dots ,\mcl{R}_n$ m\"ussen aufeinander abbildbar sein.		
+	\end{enumerate}
+\end{definition}
+\end{frame}
+%
+% Synonyme:
+% Verlustlosigkeit          ~   Verbundtreue
+% Abh\"angigkeitserhaltung  ~   Abh\"angigkeitstreue
+%
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\begin{block}{\textbf{Mit anderen Worten:}}
+	\begin{itemize}
+		\item \emph{Verlustlosigkeit}. F\"ur jede Relation $R$ und deren Zerlegung $R_1,R_2,\dots ,R_n$ muss $R$ mittels Join-Operation 
+		aus $R_1,R_2,\dots ,R_n$ rekonstruiert werden k\"onnen.
+		$$R=R_1\Join\ldots\Join R_n$$
+		\pause
+		\item \emph{Abh\"angigkeitserhaltung}. Die funktionalen Abh\"angigkeiten von $R$ m\"ussen in den Teilrelationen 
+		$R_1,R_2,\dots , R_n$ enthalten sein. Es d\"urfen aus den Relationen $R_1,R_2,\dots, R_n$ keine weiteren funktionalen 
+		Abh\"angigkeiten herleitbar sein.
+		$$FD(R)\equiv FD(R_1)\cup\ldots\cup FD(R_n)$$
+	\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\begin{block}{\textbf{Bemerkung}}
+	\begin{itemize}
+%		\item	Normalisierte Schemata nicht immer erw\"unscht! Stichworte: Performanz, Query-Komplexit\"at $\Rightarrow$ Denormalisierung
+		\item Normalisierung basiert auf Methodik und Systematik der \textbf{Normalformen} ...\\[12pt]
+		\item Normalformen dienen zur L\"osung der Anomalien- und Redundanz-Probleme
+		\item Jede Normalform erf\"ullt bestimmte Eigenschaften, die einen Teil dieser Probleme l\"osen
+	\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+Arten von Normalformen:
+\begin{itemize}
+	\item \textbf{First Normal Form}\\[4pt]
+	\item \textbf{Second Normal Form}\\[4pt]
+	\item \textbf{Third Normal Form}\\[4pt]
+	\item \textbf{Boyce-Codd Normal Form}\\[4pt]
+	\item Fourth Normal Form\\[4pt]
+	\item Fifth Normal Form (oder Project-Join Normal Form)\\[4pt]
+	\item Inclusion Dependency Normal Form\\[4pt]
+	\item Domain-Key Normal Form
+\end{itemize}
+\end{frame}
+
+\subsection{Erste Normalform}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\begin{definition}[Erste Normalform (1NF)]\label{def:1nf}
+	Ein Relationenschema $\mcl{R}$ ist in 1NF genau dann, wenn alle Attribute von $\mcl{R}$ ausschließlich atomare Werte 
+	annehmen k\"onnen. Mehrwertige oder zusammengesetzte Attribute sind nicht gestattet.
+\end{definition}
+\pause
+\nl\\[18pt]
+{Definitionsgem\"a\ss} befindet sich jede Relation automatisch in 1NF.
+\nl
+Codd hat diese Normalform aber nochmals explizit formuliert.
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Die folgende Relation \texttt{Person} befindet sich \textit{nicht} in 1NF:}
+\begin{center}
+	\begin{tabular}{|c|c|c|c|}\hline
+		\multicolumn{4}{|c|}{\small \textbf{\texttt{Person}}}\\\hline\hline
+		\small \textbf{\key{\texttt{PNr}}} & \small \textbf{\texttt{Titel}}&\small \textbf{\texttt{Vorname}}&\small\textbf{\texttt{Nachname}} \\\hline 
+		\small 1 &\small B.Sc. & \small Hans &\small Schneider  \\\hline 
+		\small 2 &\small Dipl.-Kfm. & \small Max &\small Mustermann \\\hline 
+		\small 3 &\cellcolor{Red}\small Dipl.-Inf. Dipl.-Kffr. &\small Erika &\small Musterfrau  \\\hline 
+	\end{tabular}
+\end{center}
+In diesem Beispiel hat Frau Musterfrau zwei akademische Titel, die nicht unabh\"angig voneinander verarbeitet werden k\"onnen. 
+\\[4pt]
+Eine Operation auf dem Attribut \texttt{Titel} umfasst immer die \"Anderung beider Titel.
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Normalisierung: Erzeugung einer 1NF}
+\begin{center}
+\begin{tabular}{|c|c|c|}\hline
+	\multicolumn{3}{|c|}{\small \textbf{\texttt{Person}}}\\\hline\hline
+	\small \textbf{\key{\texttt{PNr}}} & \small \textbf{\texttt{Vorname}}&\small\textbf{\texttt{Nachname}} \\\hline 
+	\small 1 & \small Hans &\small Schneider  \\\hline 
+	\small 2 & \small Max &\small Mustermann \\\hline 
+	\small 3 & \small Erika &\small Musterfrau  \\\hline 
+\end{tabular}
+\hspace{3mm}
+\begin{tabular}{|c|c|}\hline
+	\multicolumn{2}{|c|}{\small \textbf{\texttt{Titel}}}\\\hline\hline
+	\small \textbf{\key{\texttt{PNr}}} & \small \textbf{\key{\texttt{Titel}}}\\\hline 
+	\small 1 & \small B.Sc. \\\hline 
+	\small 2 & \small Dipl.-Kfm.  \\\hline 
+	\small 3 & \small Dipl.-Inf. \\\hline 
+	\small 3 & \small Dipl.-Kffr. \\\hline 
+\end{tabular}
+\end{center}
+\begin{itemize}
+\item Aus dem mehrwertigen Attribut wird eigene Relation \texttt{Titel}.
+\item Verkn\"upfung mit Relation \texttt{Person} \"uber deren Prim\"arschl\"ussel \texttt{PNr}.
+\item	Prim\"arschl\"ussel von Relation \texttt{Titel}: Fremdschl\"ussel \texttt{PNr} und Attribut \texttt{Titel}.
+\item Also: 1:n-Beziehung zwischen den Relationen \texttt{Person} und \texttt{Titel}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Atomar oder nicht atomar?}}\\[4pt]
+Ob ein Attribut atomar ist oder nicht, ist von der Verwendung des Attributs abh\"angig. 
+\begin{block}{Beispiel}
+	\begin{itemize}
+		\item In einem Attribut \texttt{Vorname} wird f\"ur eine Person mit zwei Vornamen der Wert \textit{Hans Friedrich} gespeichert. 
+		\texttt{Vorname} ist damit ein mehrwertiges Attribut. 
+		\item Falls die Anwendung lediglich die Speicherung der Vornamen ben\"otigt, kann das Attribut als atomar betrachtet werden - 
+		beide Vornamen werden wie \textit{ein} Vorname behandelt. 
+		\item F\"ur eine Abfrage, wie viele Personen einen zweiten Vornamen besitzen, w\"are eine Zerlegung jedoch wieder sinnvoll.
+	\end{itemize}
+\end{block}
+\abs
+\pause
+\alert{Es muss also vorab gepr\"uft werden, ob die Zerlegung eines mehrwertigen Attributs sinnvoll ist oder ob es als atomares 
+	Attribut behandelt werden soll.}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{1NF, Redundanzen, Anomalien}}\\[4pt]
+Eine Relation in 1NF ist nicht notwendigerweise redundanz- oder anomaliefrei:
+\begin{center}
+	\begin{tabular}{|c|c|c|c|c|c|}\hline
+		\multicolumn{6}{|c|}{\small \textbf{Mitarbeiter\_Projekt}}\\\hline\hline
+		\small \textbf{\key{MANr}} & \small \textbf{Vorname}&\small \textbf{Nachname}&\textbf{\key{PNr}} &\small \textbf{Projektname}&\small \textbf{Funktion} \\\hline 
+		\small 1 &\small Max & \small Mustermann &\small 4711 &\small Entwicklung &\small Entwickler \\\hline 
+		\small 1 &\small \cellcolor{red}Max & \small \cellcolor{red}Mustermann &\small 4713 &\small Vertrieb & \small Kampagnen \\\hline 
+		\small 2 &\small Erika &\small Musterfrau &\small 4711 &\small Entwicklung &\small SCRUM Master \\\hline 
+		\small 2 &\small \cellcolor{red}Erika &\small \cellcolor{red}Musterfrau &\small 4712 &\small Test &\small Integrations-Tests \\\hline 
+		\small 3 &\small Moritz & \small Musterherr &\small 4713 &\small Research &\small Leitung \\\hline 
+		\small 4 &\small Karla & \small Musterdame &\small 4713 &\small \cellcolor{red}Vertrieb &\small \cellcolor{red}Kampagnen \\\hline 
+	\end{tabular}
+\end{center}
+\end{frame}
+
+\subsection{Zweite Normalform}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\begin{block}{\textbf{Motivation der Zweiten Normalform}}
+	\begin{itemize}
+		\item Jeder Kandidatenschl\"ussel repr\"asentiert ein Konzept des Relationenschemas.
+		\item Alle Attribute, die zu keinem Kandidatenschl\"ussel geh\"oren, sollen einen Fakt oder ein Merkmal 
+		jedes Konzepts des Schemas darstellen.	
+	\end{itemize}
+\end{block}
+\pause
+\begin{definition}[Zweite Normalform (2NF)]\label{def:2nf}
+	Ein Relationenschema $\mcl{R}$ ist in 2NF, wenn es in 1NF ist und jedes Attribut $A$ von $\mcl{R}$, das nicht zu einem  
+	Kandidatenschlüssel geh\"ort, voll funktional von jedem Kandidatenschlüssel abhängt.
+\end{definition}
+\pause
+\begin{block}{\textbf{Folge}}
+	\begin{itemize}
+		\item Relationenschema in 1NF, dessen Kandidatenschl\"ussel nur ein Attribut haben, ist in 2NF.
+		\item Test auf 2NF muss daher nur f\"ur zusammengesetzte Kandidatenschl\"ussel erfolgen.
+	\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{Die folgende Relation ist nicht in 2NF:}
+\begin{center}
+	\begin{tabular}{|c|c|c|c|c|}\hline
+		\multicolumn{5}{|c|}{\small \textbf{\texttt{Mitarbeiter-Projekt-Fkt}}}\\\hline\hline
+		\small \textbf{\key{\texttt{MANr}}} & \small \textbf{\texttt{Vorname}}&\small \textbf{\texttt{Nachname}}
+		   &\small\textbf{\key{\texttt{PNr}}} &\small \textbf{\texttt{Funktion}} \\\hline 
+		\small 1 &\small Max & \small Mustermann &\small 4712 &\small Unit-Tests \\\hline 
+		\small 1 &\small Max & \small Mustermann &\small 4713 & \small Kampagnen \\\hline 
+		\small 2 &\small Erika &\small Musterfrau &\small 4712 &\small Integrations-Tests \\\hline 
+	\end{tabular}
+\end{center}
+\hspace*{7em}Funktionale Abhängigkeiten:
+\hspace*{7em}$\{\texttt{MANr},\texttt{PNr}\}\rightarrow\{\texttt{MANr},\texttt{PNr},\texttt{Vorname},\texttt{Nachname},\texttt{Funktion}\}$
+\\
+\hspace*{7em}$\{\texttt{MANr}\}\rightarrow\{\texttt{Vorname},\texttt{Nachname}\}$
+\pause
+\abs
+\textbf{Begr\"undung:} \texttt{Vorname} und \texttt{Nachname} nicht voll funktional von Prim\"arschlüssel 
+$\{\texttt{MANr},\texttt{PNr}\}$ (einziger Kandidatenschl\"ussel), sondern von Teilmenge $\{\texttt{MANr}\}$ 
+dieses Schlüssels funktional abhängig.
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{Zerlegung in 2NF:}
+	 \begin{center}
+		    \begin{tabular}{|c|c|c|}\hline
+					\multicolumn{3}{|c|}{\small \textbf{\texttt{Person}}}\\\hline\hline
+					 \small \textbf{\key{\texttt{MANr}}} & \small \textbf{\texttt{Vorname}}&\small\textbf{\texttt{Nachname}} \\\hline 
+					\small 1 & \small Max &\small Mustermann  \\\hline 
+					\small 2 & \small Erika &\small Musterfrau \\\hline 
+				\end{tabular}
+				\hspace{3mm}
+				\begin{tabular}{|c|c|c|}\hline
+			\multicolumn{3}{|c|}{\small \textbf{\texttt{Mitarbeiter-Projekt-Fkt}}}\\\hline\hline
+			 \small \textbf{\key{\texttt{MANr}}} & \small\textbf{\key{\texttt{PNr}}} &\small \textbf{\texttt{Funktion}} \\\hline 
+			\small 1 &\small 4712 &\small Unit-Tests \\\hline 
+			\small 1 &\small 4713 & \small Kampagnen \\\hline 
+			\small 2 &\small 4712 &\small Integrations-Tests \\\hline 
+		\end{tabular}
+			\end{center}
+\begin{itemize}
+	\item Funktionale Abh\"angigkeit $\{\texttt{MANr}\}\rightarrow\{\texttt{Vorname}, \texttt{Nachname}\}$ 
+	in eigene Relation \texttt{Person} \"uberf\"uhren
+	\item Determinante \texttt{MANr} wird Prim\"arschl\"ussel
+	\item Verbindung zu 'Rest-Relation' \texttt{Mitarbeiter-Projekt-Fkt} \"uber Fremdschl\"usselbeziehung 
+\end{itemize}
+\end{frame}
+
+\subsection{Dritte Normalform}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\textbf{Motivation der Dritten Normalform}
+\\[4pt]
+Durch 2NF k\"onnen einige Redundanzen und Anomalien beseitigt werden. 
+\pause
+\\[4pt]
+\alert{Aber: Die folgende Relation befindet sich in 2NF und enth\"alt immer noch Redundanzen.}
+\begin{center}
+	\begin{tabular}{|c|c|c|c|c|}\hline
+		\multicolumn{5}{|c|}{\small \textbf{\texttt{Mitarbeiter-Projekt-Fkt}}}\\\hline\hline
+		\small \textbf{\key{\texttt{MANr}}} & \small \textbf{\texttt{Vorname}}&\small \textbf{\texttt{Nachname}}
+		  &\small\textbf{\texttt{PLZ}} &\small \textbf{\texttt{Ort}} \\\hline 
+		\small 1 &\small Max & \small Mustermann &\small 68165 &\cellcolor{Red}\small Mannheim \\\hline 
+		\small 2 &\small Erika &\small Musterfrau &\small 57072 &\small Siegen \\\hline 
+		\small 3 &\small Hans &\small Schmidt &\small 68165 &\cellcolor{Red}\small Mannheim \\\hline 
+	\end{tabular}
+\end{center}
+\hspace*{9em}{Funktionale Abh\"angigkeiten:}\\
+\hspace*{9em}$\{\texttt{MANr}\}\rightarrow\{\texttt{Vorname},\texttt{Nachname},\texttt{PLZ},\texttt{Ort}\}$
+\\
+\hspace*{9em}$\{\texttt{PLZ}\}\rightarrow\{\texttt{Ort}\}$
+\pause
+\\[4pt]
+\textbf{Grund:} Funktionale Abh\"angigkeit eines Attributes von einem Nicht-Schl\"ussel.
+\end{frame}
+
+% Nicht verwendete alternative Definition (JR), jedoch ist hier Transitivit\"at nicht definiert!
+\nowrite{
+	\begin{frame}[t]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\begin{definition}[Dritte Normalform (3NF)]
+		\label{def:3nf}
+		Eine Relation $R$ ist genau dann in 3NF, wenn sie in 2NF ist und kein Nicht-Schlüssel-Attribut transitiv von einem 
+		Schlüsselkandidaten abhängt.
+	\end{definition}
+	Transitivitätsregel: $\{X\rightarrow Y\}\wedge \{Y\rightarrow Z\}\Longrightarrow\{X\rightarrow Z\}$
+	\vspace{3mm}
+	\alert{Für die 3NF darf es kein solches $Y$ unter den Nicht-Schlüssel-Attributen geben.}
+\end{frame}
+}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\begin{definition}[Dritte Normalform (3NF)]\label{def:3nf}
+Ein Relationenschema $\mcl{R}(\mcl{A})$ ist in 3NF, wenn f\"ur jede funktionale Abh\"angigkeit $X\rightarrow A$ 
+mit $X\subseteq\mcl{A}$ und $A\in\mcl{A}$ eine der folgenden Bedingungen gilt:
+\\[4pt]
+\begin{itemize}
+	\item $X$ ist Superschl\"ussel von $\mcl{R}$.\\[4pt]
+	\item $A\in X$, d.~h.~$X\rightarrow A$ ist trivial.\\[4pt]
+	\item $A$ ist in einem Kandidatenschl\"ussel von $\mcl{R}$ enthalten.
+\end{itemize}
+\end{definition}
+\pause
+\abs
+\begin{lemma}
+Ist ein Relationenschema $\mcl{R}(\mcl{A})$ in 3NF, dann ist es auch in 2NF.
+\end{lemma}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Die folgende Relation befindet sich nicht in 3NF:}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}\hline
+\multicolumn{5}{|c|}{\small \textbf{\texttt{Mitarbeiter}}}\\\hline\hline
+\small \textbf{\texttt{\key{MANr}}} & \small \textbf{\texttt{Vorname}}&\small \textbf{\texttt{Nachname}}
+&\small\textbf{\texttt{PLZ}} &\small \textbf{\texttt{Ort}} \\\hline 
+\small 1 &\small Max & \small Mustermann &\small 68165 &\small Mannheim \\\hline 
+\small 2 &\small Erika &\small Musterfrau &\small 57072 &\small Siegen \\\hline 
+\small 3 &\small Hans &\small Schmidt &\small 68165 &\small Mannheim \\\hline 
+\end{tabular}
+\end{center}
+\textbf{Funktionale Abhängigkeiten:}
+\nl
+$\texttt{MANr}\rightarrow\{\texttt{Vorname}, \texttt{Nachname}, \texttt{PLZ}, \texttt{Ort}\}$
+\\
+$\texttt{PLZ}\rightarrow\texttt{Ort}$
+\pause
+\\[8pt]
+\textbf{Begr\"undung:} 
+\nl
+$\texttt{PLZ}$ ist nicht Superschl\"ussel, $\texttt{Ort}\notin\{\texttt{PLZ}\}$, $\texttt{Ort}$ geh\"ort nicht zu einem Kandidatenschl\"ussel.
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Zerlegung in 3NF:}
+\begin{center}
+\begin{tabular}{|c|c|c|c|}\hline
+\multicolumn{4}{|c|}{\small \textbf{\texttt{Mitarbeiter}}}\\\hline\hline
+\small \textbf{\texttt{\key{MANr}}} & \small \textbf{\texttt{Vorname}}&\small \textbf{\texttt{Nachname}}
+&\small\textbf{\texttt{PLZ}}  \\\hline 
+\small 1 &\small Max & \small Mustermann &\small 68165 \\\hline 
+\small 2 &\small Erika &\small Musterfrau &\small 57072\\\hline 
+\small 3 &\small Hans &\small Schmidt &\small 68165 \\\hline 
+\end{tabular}
+\hspace{3mm}
+\begin{tabular}{|c|c|}\hline
+\multicolumn{2}{|c|}{\small \textbf{\texttt{Ort}}}\\\hline\hline
+\small\textbf{\texttt{\key{PLZ}}} & \small\textbf{\texttt{Ort}}\\\hline
+\small 68165 & \small Mannheim\\\hline 
+\small 57072 & \small Siegen \\\hline
+\end{tabular}
+\end{center}
+\pause
+Die 'schlechte' funktionale Abh\"angigkeit $\texttt{PLZ}\rightarrow\texttt{Ort}$ wird in eine eigene Relation \"uberf\"uhrt: 
+\begin{itemize}
+\item Determinante \texttt{PLZ} wird zum Prim\"arschl\"ussel
+\item \texttt{PLZ} über Fremdschl\"usselbeziehung mit Mitarbeiter-Relation verkn\"upft
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Allgemein gilt:}
+\\[8pt]
+Ein Relationenschema $\mcl{R}$ kann stets durch den \emph{Synthesealgorithmus} verlustlos und abh\"angigkeitserhaltend in 3NF-Schemata 
+$\mcl{R}_1,\ldots,\mcl{R}_n$ zerlegt werden.
+\pause
+\\[36pt]
+Vorteil der 3NF:
+\\[8pt]
+Beseitigung einiger Redundanzen durch Entfernung von Nicht-Schl\"ussel-Abhängigkeiten.
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+In welcher NF befindet sich die folgende Relation?
+\abs
+%
+% Antwort: in 3NF
+%
+\begin{center}
+\begin{tabular}{|c|c|c|}\hline
+\multicolumn{3}{|c|}{\small \textbf{\texttt{MITARBEITER-PROJEKT-GRUPPENLEITUNG}}}\\\hline\hline
+\small \textbf{\key{MANr}} & \small \textbf{\texttt{\key{PROJEKT}}}&\small \textbf{\texttt{PROJEKTLEITER}} \\\hline 
+\small 1 &\small Entwicklung A& \small Meier  \\\hline 
+\small 2 &\small Entwicklung A &\small Schulz \\\hline 
+\small 2 &\small Entwicklung B &\small Schmidt \\\hline 
+\small 3 &\small Entwicklung B &\small Schmidt \\\hline 
+\end{tabular}
+\end{center}
+\end{frame}
+
+\subsection{Boyce-Codd Normalform}
+
+% Nicht verwendete alternative Definition (JR), jedoch ist hier Transitivit\"at nicht definiert!
+\nowrite{
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\begin{definition}[Boyce-Codd Normalform (BCNF)]
+\label{def:bcnf}
+Eine Relation $R$ ist genau dann in BCNF, wenn sie in 3NF ist und kein Attribut transitiv von einem Schlüsselkandidaten abhängt.
+\end{definition}
+\vspace{3mm}
+\alert{Verallgemeinerung der 3NF: die BCNF bezieht sich auf alle Attribute, nicht nur auf die Nicht-Schlüssel-Attribute. Sie ist daher eine 
+Verschärfung der 3NF: Die BCNF verhindert, dass Teile von Schlüsselkandidaten funktionale Abhängigkeiten aufweisen.}
+\end{frame}
+}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\begin{definition}[Boyce-Codd-Normalform (BCNF)]\label{def:bcnf}
+Ein Relationenschema $\mcl{R}(\mcl{A})$ ist in BCNF, wenn f\"ur jede funktionale Abh\"angigkeit $X\rightarrow Y$ 
+mit $X,Y\subseteq\mcl{A}$ eine der folgenden Bedingungen gilt:
+\\[4pt]
+\begin{itemize}
+\item $X$ ist Superschl\"ussel von $\mcl{R}$.\\[4pt]
+\item $Y\subseteq X$, d.~h.~$X\rightarrow Y$ ist trivial.
+\end{itemize}
+\end{definition}
+\pause
+\abs
+\begin{lemma}
+Ist ein Relationenschema $\mcl{R}(\mcl{A})$ in BCNF, dann ist es auch in 3NF.
+\end{lemma}
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Die folgende Relation befindet sich nicht in BCNF:}
+\begin{center}
+\begin{tabular}{|c|c|c|}\hline
+\multicolumn{3}{|c|}{\small \textbf{\texttt{MITARBEITER-PROJEKT-GRUPPENLEITUNG}}}\\\hline\hline
+\small \textbf{\key{\texttt{MANr}}} & \small \textbf{\key{\texttt{PROJEKT}}}&\small \textbf{\texttt{PROJEKTLEITER}} \\\hline 
+\small 1 &\small Entwicklung A& \small Meier  \\\hline 
+\small 2 &\small Entwicklung A &\small Schulz \\\hline 
+\small 2 &\small Entwicklung B &\small Schmidt \\\hline 
+\small 3 &\small Entwicklung B &\small Schmidt \\\hline 
+\end{tabular}
+\end{center}
+Funktionale Abh\"angigkeiten: 
+% Sachverhalt:
+% > Mitarbeiter arbeiten in Projekten.
+% > Ein Mitarbeiter kann in verschiedenen Projekten arbeiten.
+% > Ein Mitarbeiter kann in h¨ochstens einem Projekt als Projektleiter auftreten.
+\begin{itemize}
+\item $\{\texttt{MANr}, \texttt{PROJEKT}\}\rightarrow\texttt{PROJEKTLEITER}$ (Prim\"arschl\"ussel)
+%\item $\{\texttt{MANr}, \texttt{PROJEKTLEITER}\}\rightarrow\texttt{PROJEKT}$ (Kandidatenschl\"ussel)
+\item $\texttt{PROJEKTLEITER}\rightarrow \texttt{PROJEKT}$
+\end{itemize}
+\pause\abs
+\textbf{Begr\"undung:}
+\nl
+\texttt{PROJEKTLEITER} ist nicht Superschl\"ussel, $\texttt{PROJEKTLEITER}\rightarrow \texttt{PROJEKT}$ nicht trivial
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Zerlegung in BCNF:}
+\begin{center}
+\begin{tabular}{|c|c|}\hline
+\multicolumn{2}{|c|}{\small \textbf{\texttt{MITARB-PROJ-GRP}}}\\\hline\hline
+\small \textbf{\key{\texttt{MANr}}} & \small \textbf{\key{\texttt{PROJEKTLEITER}}} \\\hline 
+\small 1 & \small Meier  \\\hline 
+\small 2 & \small Schulz \\\hline 
+\small 2 & \small Schmidt \\\hline 
+\small 3 & \small Schmidt \\\hline 
+\end{tabular}
+\hspace{3mm}
+\begin{tabular}{|c|c|}\hline
+\multicolumn{2}{|c|}{\small \textbf{\texttt{PROJ-GRP-PROJEKT}}}\\\hline\hline
+\small \textbf{\key{\texttt{PROJEKTLEITER}}} & \small \textbf{\texttt{PROJEKT}} \\\hline 
+\small Meier & \small Entwicklung A  \\\hline 
+\small Schulz & \small Entwicklung B \\\hline 
+\small Schmidt & \small Entwicklung B \\\hline 
+\end{tabular}
+\end{center}
+'Schlechte' funktionale Abh\"angigkeit $\texttt{PROJEKTLEITER}\rightarrow \texttt{PROJEKT}$ in eigene Relation auslagern: 
+\begin{itemize}
+\item Determinante \texttt{PROJEKTLEITER} wird zum Prim\"arschl\"ussel in dieser Relation.
+\item \texttt{PROJEKTLEITER} wird zum Fremdschl\"ussel in der \texttt{MITARB-PROJ-GRP}-Relation. 
+% (JR):
+%	Die Determinante eines Teilschlüssels wird in eine neue Relation ausgelagert. Die Determinante
+%	wird zum neuen Primärschlüssel. In der Relation wird der abhängige Teilschlüssel ergänzt.
+\end{itemize}
+\pause
+\abs
+\alert{Prim\"arschl\"ussel $\{\texttt{MANr}, \texttt{PROJEKT}\}\rightarrow\texttt{PROJEKTLEITER}$ geht bei Zerlegung verloren.}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Allgemein gilt:}
+\\[8pt]
+Ein Relationenschema $\mcl{R}$ kann stets durch den \emph{Dekompositionsalgorithmus} verlustlos in BCNF-Schemata 
+$\mcl{R}_1,\ldots,\mcl{R}_n$ zerlegt werden.
+\pause
+\\[36pt]
+\alert{Diese Zerlegung ist nicht immer abh\"angigkeitserhaltend.}
+\end{frame}
+
+\nowrite{
+\section*{Übungsaufgaben}
+%\subsection*{Grundlegendes Datenbankverständnis}
+\begin{frame}{\insertsection}
+	%\framesubtitle{\insertsubsection}
+	\begin{alertblock}{Normalisierung}
+		{
+			Gegeben ist die folgende Relation: 			
+			\centering			
+			\small
+			\begin{tabular}{|c|c|c|c|}\hline
+				\multicolumn{4}{|c|}{\textbf{Buchhandel}}\\\hline
+				\textbf{InvNr} & \textbf{Titel} & \textbf{ISBN} & \textbf{Autor}\\\hline\hline
+				1 & Per Anhalter durch die Galaxis & 0-4561-123 & Adams \\\hline 
+				2 & Datenbank-Systeme & 3-1234-567 & Kemper und Eickler \\\hline 
+				3 & Datenbank-Systeme & 4-5678-901 & Elmasri und Navathe \\\hline 
+				4 & Machs gut und danke für den Fisch& 2-3456-789 & Adams\\\hline 
+			\end{tabular}			
+		}
+				\begin{itemize}
+					\item In welcher Normalform befindet sich die unten stehende Relation? 
+					\item Überführen Sie die Relation in die 3NF.
+				\end{itemize}		
+	\end{alertblock}
+\end{frame}
+%
+\begin{frame}{\insertsection}
+	%\framesubtitle{\insertsubsection}
+	\begin{alertblock}{Normalisierung}
+		{
+			Gegeben ist die folgende Relation: 			
+			\centering			
+			\small
+			\begin{tabular}{|c|c|c|c|c|c|c|}\hline
+				\multicolumn{7}{|c|}{\textbf{Ergebnisse}}\\\hline
+				\textbf{MatrNr} & \textbf{Name} & \textbf{Stgang} & \textbf{StRichtung} & \textbf{Fach} &  \textbf{Semester} & \textbf{Note} \\\hline\hline
+				4711 & Mustermann & WI & AM &  DB 1 & 3 & 1.4 \\\hline
+				4713 & Schulz & WI & SE &  DB 1 & 3 & 1.6 \\\hline
+				4713 & Schulz & WI & SE &  VertSys & 4 & 1.8 \\\hline
+				4712 & Musterfrau & WI & AM &  DB 1 & 3 & 1.2 \\\hline
+				4715 & Schröder & WI & SE &  DB 1 & 3 & 5.0 \\\hline
+				4711 & Mustermann & WI & AM &  DB 2 & 4 & 2.0 \\\hline
+				4712 & Musterfrau & WI & AM &  DB 2 & 4 & 2.2 \\\hline
+				4715 & Schröder & WI & SE &  VertSys & 4 & 2.2 \\\hline
+			\end{tabular}			
+		}
+		\begin{itemize}
+			\item In welcher Normalform befindet sich die unten stehende Relation? 
+			\item Überführen Sie die Relation in die 3NF.
+		\end{itemize}
+	\end{alertblock}	
+\end{frame}
+}

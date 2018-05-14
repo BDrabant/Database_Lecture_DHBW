@@ -1,0 +1,1416 @@
+%!TEX root = Slides.tex
+\part{SQL}
+\label{part:sql}
+
+\section{Einf\"uhrung und Grundlagen}
+
+\subsection{Spracheinordnung}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\begin{itemize}
+	\item Bisher: 
+	\begin{itemize}
+		\item Formale Modelle zur Beschreibung von Datenbanken: ERM, relationale Modelle
+		\item Formale Anfragesprache: Relationale Algebra
+	\end{itemize}
+	\abs
+	\item Jetzt: 
+	\begin{itemize}
+		\item SQL als konkrete Datendefinitions- und -manipulationssprache
+		\item F\"ur die praktische Anwendung in relationalen Datenbankmanagementsystemen (RDBMS)
+		\item Basierend auf relationalen Modellen und relationaler Algebra
+	\end{itemize}	
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{\textbf{Geschichte}}\\[4pt]
+	\begin{itemize}
+		\item Structured Query Language (SQL) wurde in 1970er Jahren von IBM entwickelt
+		\item Ursprünglicher Name: Sequel
+		\item Entwicklung im Rahmen von IBM System/R
+		\item Heute Standard zur Arbeit in RDBMS
+		\item Theoretische Grundlage bildet die relationale Algebra
+		\item Verschiedene Versionen, etabliert in den Normen ISO/IEC 9075 (Datenbanksprachen)
+		\begin{itemize}
+			\item SQL89
+			\item SQL92
+			\item SQL99
+		\end{itemize}
+		\item Viele proprietäre Erweiterungen und unterschiedliche Dialekte!
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+SQL beinhaltet Befehle und Operationen aus den Bereichen\\[8pt]
+\begin{itemize}
+	\item Data Definition Language (DDL)\\[4pt]
+	\item Data Manipulation Language (DML)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+Data Definition Language (DDL): Erzeugen von Schemata (Metadaten)\\[4pt]
+\begin{itemize}
+\item Relationenschemata und Attributen mit ihren Wertebereichen
+\item Beziehungen zwischen Relationenschemata
+\item Integrit\"atsbedingungen
+\item Berechtigungen und Zugriffe f\"ur Datanbankmanipulationen  
+\item Transaktionskontrolle
+\end{itemize}
+\pause
+\abs
+Data Manipulation Language (DML): Abfrage und Manipulation von Daten\\[4pt]
+\begin{itemize}
+\item (C) Erzeugen neuer Datens\"atze / Tupel
+\item (R) Lesen (Abfragen) von Datens\"atzen -- Query
+\item (U) \"Andern von Datens\"atzen bzw.~Attributwerten
+\item (D) L\"oschen von Datens\"atzen
+\end{itemize}
+\pause
+\abs
+Au\ss erdem erm\"oglicht SQL die Definition physischer Zugriffspfade (Indizes).
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{SQL ist eine \emph{deskriptive} oder \emph{deklarative} Sprache}	\\[8pt]
+\begin{itemize}
+	\item Beschreibung des Problems: Was will man erreichen, was soll berechnet werden?
+	\item Die Prozedur wird vom System ermittelt: Wie wird das gew\"unschte Ziel erreicht?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\begin{columns}
+	\begin{column}{.2\textwidth}
+\lstset{language=SQL}
+\begin{lstlisting}
+ SELECT * FROM Kunde 
+ WHERE PLZ = 68165;
+\end{lstlisting}
+	\end{column}
+	\begin{column}{.48\textwidth}
+		\lstset{language=Java}
+\begin{lstlisting}
+ kundenListe = ...
+ ArrayList<Kunde> result = new ArrayList<>();
+ for (Kunde tmpKunde : kundenListe) {
+  if (tmpKunde.getPLZ() == 68165)
+   result.add(tmpKunde);
+  }
+ return result;
+\end{lstlisting}
+	\end{column}
+\end{columns}
+\begin{itemize}
+\item SQL (links): Beschreibt, was das gew\"unschte Ergebnis sein soll. 
+\item Java (rechts): Prozedur/Algorithmus wird implementiert, der das Ergebnis herbeif\"uhrt.\\[8pt]
+\pause
+\item SQL-Befehle k\"onnen daher auf unterschiedliche Arten implementiert werden.
+\item Das erm\"oglicht die physische Datenunabh\"angigkeit.
+\item Details: siehe Vorlesung \textit{Datenbanktechnik}.
+\end{itemize}
+\end{frame}
+
+\subsection{Grundlegende Datentypen}
+
+\begin{frame}\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{Eine (kleine) Auswahl der Datentypen}
+	\begin{center}
+		\begin{tabular}{|c|p{10cm}|}\hline
+			 \small \textbf{Bezeichnung} & \small \textbf{Beschreibung} \\\hline
+			\small\texttt{bit, bool} & \small Wahrheitswert, 0 oder 1, \textit{wahr} oder \textit{falsch}  \\\hline
+			\small\texttt{char(n)} & \small Character-Sequenz mit einer Fixlänge von $n$ Zeichen  \\\hline
+			\small\texttt{varchar(n)} & \small Character-Sequenz mit einer Maximallänge von $n$ Zeichen \\\hline
+			\small\texttt{int}&\small Ganzzahlen (4 Byte, von -2147483648 -- 2147483647)\\\hline
+			\small\texttt{decimal(p,d)}&\small Fixpoint-Zahl mit insgesamt $p$ Stellen, davon $d$ Nachkommastellen\\\hline
+			\small\texttt{real,float,double}&\small Floatingpoint-Zahl mit einfacher (32 Bit) oder doppelter (64 Bit) Genauigkeit\\\hline
+			\small\texttt{date,time}&\small Datums- und Zeitangaben\\\hline
+			\small\texttt{BLOB}&\small Binary Large Object für Binärdaten\\\hline
+		\end{tabular}
+	\end{center}
+\end{frame}
+
+\begin{frame}\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{Besondere Datentypen (proprietär!)}
+	\begin{itemize}
+		\item \texttt{enum}, um Aufzählungen abzubilden
+		\item Geometrische Datentypen (z.B. \texttt{point}, \texttt{circle} oder \texttt{polygon})
+		\item Netzwerktypen (z.B. \texttt{ipv4}, \texttt{cidr} oder \texttt{macaddr})
+		\item Universally Unique Identifiers (z.B. \texttt{uuid})
+		\item Spezielle Datentypen für Volltextsuchen im Bereich des Natural Language Processing (z.B. \texttt{tsvector})
+	\end{itemize}
+\abs
+Jedes RDBMS hat ein eigenes Set von proprietären Datentypen, ledglich die Basisdatentypen sind interoperabel!
+\end{frame}
+
+\subsection{\texttt{null}-Werte}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\texttt{null}-Werte k\"onnen in Tabellen vorkommen und k\"onnen dabei unterschiedliche Bedeutung haben:
+\begin{itemize}
+	\item Es existiert kein Wert
+	\item Es k\"onnte ein Wert existieren, der aber (noch) unbekannt ist
+	\item Jeder Wert ist m\"oglich
+	\item $\dots$ (insgesamt 13 verschiedene Bedeutungen von \texttt{null})
+\end{itemize}
+\abs
+\pause
+\alert{Einheitliche Semantik für \texttt{null} existiert somit nicht! 
+Daher muss SQL auf spezielle Weise mit \texttt{null} umgehen. Dazu sp\"ater mehr.}
+\end{frame}
+
+\section{Einfache SQL-Statements}
+\subsection{Relationenschema -- Erzeugung, Update, L\"oschen}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Erzeugen einer Datenbank innerhalb des Datenbankmanagementsystems}}\\[4pt]
+\lstset{language=sql}
+\begin{lstlisting}[numbers=none]
+CREATE DATABASE <databasename>;
+\end{lstlisting}
+\abs
+In dieser Datenbank k\"onnen nun Datenbankschemata angelegt werden.
+\abs\ \abs\ \abs 
+\structure{Doku: \href{https://www.postgresql.org/docs/9.6/static/sql-createdatabase.html}{\textcolor{blue}{\underline{PostgreSQL 
+				Online Documentation für \texttt{CREATE DATABASE}}}}}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Erzeugen eines Datenbankschemas innerhalb der Datenbank}}\\[4pt]
+\lstset{language=sql}
+\begin{lstlisting}[numbers=none]
+CREATE SCHEMA <schemaname>;
+\end{lstlisting}
+\abs
+In diesem Schema k\"onnen nun Tabellen/Relationenschemata angelegt werden.
+\abs\ \abs\ \abs 
+\structure{Doku: \href{https://www.postgresql.org/docs/current/static/sql-createschema.html}{\textcolor{blue}{\underline{PostgreSQL 
+			Online Documentation für \texttt{CREATE SCHEMA}}}}}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{DDL-Statements}
+\framesubtitle{Erzeugen einer Relation}
+\structure{\textbf{Erzeugen eines Relationenschemas im Datenbankschema}}\\[4pt]
+\lstset{language=sql}
+\begin{lstlisting}[numbers=none]
+CREATE TABLE "<schemaname>"."R" (a1 d1, a2 d2, ... , an dn);
+\end{lstlisting}
+\begin{itemize}
+\item im Datenbankschema \texttt{<schemaname>}
+\item mit Attributnamen $\texttt{a1},\dots,\texttt{an}$ (z.B. Vorname, Name, PLZ)
+\item und Dom\"anen $\texttt{d1},\dots,\texttt{dn}$, die auf Datentypen des RDBMS aufbauen 
+(z.B. \texttt{int, varchar} etc.)
+\end{itemize}
+\abs\ \abs 
+\structure{Doku: \href{https://www.postgresql.org/docs/current/static/sql-createtable.html}{\textcolor{blue}{\underline{PostgreSQL 
+		Online Documentation für \texttt{CREATE TABLE}}}}}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Beispiel:}\\[4pt]
+\begin{columns}
+\begin{column}{0.9\textwidth}
+	\lstset{language=sql}
+\begin{lstlisting}[numbers=none]
+CREATE TABLE Film (FilmNr int, Name varchar(50), ErschJahr int, GenreID int);
+\end{lstlisting}
+\end{column}
+\end{columns}
+\abs
+\begin{itemize}
+\item Erzeugung von Relationenschema \texttt{Film}
+\item Attribute \texttt{FilmNr} und \texttt{ErschJahr} Ganzzahlen vom Typ \texttt{int}
+\item	Attribut \texttt{Name} Unicode-Zeichenkette vom Typ \texttt{varchar(50)} mit max.~50 Zeichen.
+\end{itemize}
+\abs
+\alert{Hier sind weder Prim\"arschl\"ussel noch Nebenbedingungen definiert worden - z.B. dass der Filmname nicht leer sein darf.
+SQL bietet diese M\"oglichkeiten f\"ur Integrit\"atsbedingungen.}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\framesubtitle{Integritätsbedingungen}
+	\structure{Attribute können Integritätsbedingungen enthalten, die direkt hinter der Datentyp-Deklaration eingefügt werden können:}
+	\abs
+	\begin{description}[style=multiline,leftmargin=0cm]
+		\item[PRIMARY KEY] Definition eines oder mehrerer Attribute als Primärschlüssel
+		\item[UNIQUE] Attribute m\"ussen eindeutig sein, sind aber \textit{nicht der Primärschlüssel}
+		\item[NOT NULL] Attribut darf nicht \texttt{null} sein
+		\item[CHECK] Es kann eine zusätzliche Prüfbedingung angegeben werden (z.B. keine negativen Altersangaben oder Jahreszahlen)
+		\item[DEFAULT] Es kann ein Default-Wert für ein Attribut festgelegt werden
+		\item[REFERENCES] Setzt eine Fremdschlüssel-Beziehung auf eine andere Relation
+	\end{description}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+structure{Primary Key}
+\begin{lstlisting}[xleftmargin=3ex]
+CREATE TABLE Film (
+  FilmNr int PRIMARY KEY,
+  Name varchar(50) NOT NULL,
+  ErschJahr int CHECK (ErschJahr > 1900),
+  GenreID int REFERENCES Genre(GenreID)
+);
+		\end{lstlisting}
+		\abs
+\begin{itemize}
+	\item \texttt{FilmNr} Primärschlüssel des Schemas \texttt{Film}
+	\item \texttt{Name} darf nicht den Wert \texttt{null} annehmen 
+	\item \texttt{ErschJahr} muss mit Werten $> 1900$ belegt sein
+	\item \texttt{GenreID} ist Fremdschlüssel auf Schema \texttt{Genre} und ihr Attribut \texttt{GenreID}	
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Integrit\"tsbedingungen mit \texttt{CHECK}}
+\begin{itemize}
+	\item Vergleichsoperatoren $<,\leq,=,\geq,>$
+	\item \texttt{[NOT] IN (<Werteliste>)}
+	\item \texttt{[NOT] BETWEEN (<Werteliste>)}
+	\item \texttt{[NOT] LIKE (<Textpattern>)}
+\end{itemize}
+\abs
+\structure{Noch ein Beispiel:}
+\begin{lstlisting}[xleftmargin=3ex]
+CREATE TABLE Ort
+ ...
+ PLZ int CHECK(VALUE BETWEEN(0 AND 99999)),
+ ...
+);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	Integritätsbedingungen können auch nachgelagert werden. 
+	\nl
+	So können z.B. Attribut-übergreifende Bedingungen formuliert werden:
+		\lstset{escapeinside={(*@}{@*)}}
+		\begin{lstlisting}[xleftmargin=3ex]
+CREATE TABLE Raum (
+  GebaeudeNr int,
+  RaumNr int,
+  Groesse int,
+  Beschreibung varchar(100),
+  PRIMARY KEY(GebaeudeNr, RaumNR), (*@\label{lst:pk}@*)
+  FOREIGN KEY (GebaeudeNr) REFERENCES Gebaeude(GebaeudeNr) (*@\label{lst:fk}@*)
+);
+		\end{lstlisting}
+\abs
+\begin{itemize}
+	\item Zeile \ref{lst:pk}: Deklaration eines zusammengesetzten Primärschlüssels
+	\item Zeile \ref{lst:fk}: Foreign Key kann auch mehrere Attribute enthalten: \texttt{REFERENCES}-Syntax wird zur
+	\texttt{FOREIGN KEY}-Syntax erweitert
+\end{itemize}	
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Fremdschl\"usselbeziehung}}\\[4pt]
+\begin{itemize}
+	\item DBMS verbietet das Löschen von Datensätzen (in Prim\"artabelle), 
+	auf die durch Fremdschlüssel-Beziehung (in Fremdtabelle) 
+	referenziert wird.
+	\item	Dieses Verhalten kann mit Hilfe der \texttt{FOREIGN KEY}-Deklaration in der Fremdtabelle
+	ver\"andert werden.
+	\item Zwei Szenarien: \texttt{ON DELETE} und \texttt{ON UPDATE}. 
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Fremdschl\"usselbeziehung}}\\[4pt]
+\begin{itemize}
+\item \texttt{ON DELETE} legt fest, wie auf \emph{Löschoperationen} reagiert wird
+\begin{itemize}
+	\item \texttt{CASCADE}: Löscht Datensatz in der referenzierenden Tabelle
+	\item \texttt{SET NULL / SET DEFAULT}: Setzt das Attribut in der referenzierenden Tabelle auf \texttt{null} bzw. auf Default-Wert
+	\item \texttt{NO ACTION}: Erlaubt das Brechen der Fremdschlüsselbeziehung
+\end{itemize}
+\item \texttt{ON UPDATE} legt fest, wie auf \emph{Updates} reagiert wird.
+\begin{itemize}
+	\item \texttt{CASCADE}: \'"Andert den Wert des Attributs in der referenzierenden Tabelle
+	\item \texttt{SET NULL / SET DEFAULT}: Setzt das Attribut in der referenzierenden Tabelle \texttt{null} bzw. auf einen Default-Wert
+	\item \texttt{NO ACTION}: Erlaubt das Brechen der Fremdschlüsselbeziehung
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+		\structure{Beispiel:}
+		\lstset{escapeinside={(*@}{@*)}}
+		\begin{lstlisting}[xleftmargin=3ex]
+CREATE TABLE Anschrift (
+  ...
+  FOREIGN KEY (PLZ) REFERENCES Ort(PLZ)
+  ON DELETE CASCADE
+  ON UPDATE SET NULL
+);
+		\end{lstlisting}
+\abs
+\alert{Achtung: 
+	\begin{itemize}
+	 \item	Das L\"osch- oder Update-Verhalten kann unabh\"angig voneinander gesetzt werden.
+	 \item Das L\"osch- oder Update-Verhalten wird in jeder referenzierenden Fremdtabelle 
+	 unabh\"angig gesetzt.
+  \end{itemize}}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+\textbf{Relationschemata werden mit dem \texttt{DROP TABLE} Befehl gelöscht.}\\[4pt]
+\structure{Beispiel:}
+\begin{lstlisting}[xleftmargin=3ex,numbers=none]
+DROP TABLE Raum;
+\end{lstlisting}
+\abs
+\begin{itemize}
+	\item L\"oschen der Tabelle beinhaltet L\"oschen aller Inhalte
+	\item L\"oschen kann nicht r\"uckg\"angig gemacht werden. 
+	\item Wird referentielle Integrit\"at gef\"ahrdet, kann Tabelle nicht gel\"oscht werden.	
+\end{itemize}
+\abs
+\alert{Achtung: Die meisten RDBMS fragen vor Befehlsausführung nicht nach! 
+ \texttt{DROP TABLE} sollte daher mit Vorsicht angewendet werden.}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{Nachträgliche Änderungen an Tabellen können mit \texttt{ALTER TABLE} 
+		durchgeführt werden.}\\[4pt]
+\begin{itemize}
+	\item Änderungen von Attributen
+	\begin{itemize}
+		\item \texttt{\textbf{ALTER TABLE} Raum \textbf{ADD COLUMN} Verwendung varchar(20) NOT NULL}
+		\item \texttt{\textbf{ALTER TABLE} Raum \textbf{DROP COLUMN} Verwendung}\\[4pt]
+	\end{itemize}
+	\item Änderungen von Integritätsbedingungen
+	\begin{itemize}
+		\item \texttt{\textbf{ALTER TABLE} Raum \textbf{ADD PRIMARY KEY}(RaumNr)}
+	\end{itemize}
+\end{itemize}
+\abs
+Befehl \texttt{ALTER TABLE} bietet Vielzahl von weiteren M\"oglichkeiten, die je nach 
+verwendetem RDBMS stark variieren k\"onnen.
+\end{frame}
+
+\subsection{Relationen -- Einf\"ugen, Update, L\"oschen}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+\onslide
+	\structure{Datensätze werden in eine Tabelle mit dem Befehl \texttt{INSERT INTO} eingefügt.}
+	\begin{block}{Generelle Syntax}
+	\texttt{INSERT INTO <tabellenname> [(attributliste)] VALUES (werteliste)}
+	\end{block}
+\pause
+	\begin{itemize}
+		\item Optionale Attributliste benennt jedes einzuf\"ugende Attribut 
+		\item Reihenfolge von Attribut- und Werteliste müssen übereinstimmen
+		\item Nicht angegebene Attribute werden mit \texttt{null} oder Default-Werten belegt
+		\item Ohne Attributliste: Insert eines gesamten Tupel $\rightarrow$ in korrekter Reihenfolge!
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\textbf{Beispiel}\\[4pt]
+  Einf\"ugen in Tabelle \texttt{Person(ID,Vorname,Nachname)}
+	\begin{columns}
+		\begin{column}{.48\textwidth}
+			\lstset{escapeinside={(*@}{@*)}}
+		\begin{lstlisting}[xleftmargin=2ex]
+INSERT INTO Person (ID, Nachname)
+VALUES
+(1,"Meier");
+		\end{lstlisting}
+		\end{column}
+
+		\begin{column}{.48\textwidth}
+			\lstset{escapeinside={(*@}{@*)}}
+		\begin{lstlisting}[xleftmargin=3ex]
+INSERT INTO Person
+VALUES
+(1,"Hans","Meier");
+		\end{lstlisting}
+		\end{column}
+	\end{columns}
+\abs
+\begin{itemize}
+	\item Linkes Beispiel: Durch Angabe der Attribute \texttt{ID} und \texttt{Nachname} 
+		wird der Vorname mit \texttt{null} belegt. 
+	\item Rechtes Beispiel: Ohne Attributliste muss zu allen Attributen der Relation ein Wert
+	(in der korrekten Reihenfolge) vorkommen.	
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{In einem SQL-Befehl können auch mehrere Tupel in Tabelle geschrieben werden:}
+	\abs
+	\begin{lstlisting}[xleftmargin=3ex]
+INSERT INTO Person VALUES
+  (1,"Hans","Meier"),
+  (2,"Freddy","Kronzucker"),
+  (3,"Grete","Schneider");
+\end{lstlisting}
+\abs
+Auf diese Weise können interne Performance-Optimierungen bei Insert-Operationen genutzt werden.
+\abs
+\alert{Achtung: Multiple Inserts werden nicht von allen RDBMS unterstützt.}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{Datens\"atze können mit \texttt{UPDATE}-Befehl verändert werden.}\\[4pt]
+\begin{block}{Allgemeine Syntax}
+	\begin{lstlisting}[xleftmargin=3ex]
+UPDATE <tabellenname>
+SET <attribut>  = <wert>
+WHERE <selektionsbedingungen>;
+		\end{lstlisting}
+	\end{block}
+\pause
+\begin{itemize}
+	\item Ein Update wird immer nur auf genau einer Tabelle ausgeführt
+	\item Dabei wird das benannte Attribut mit einem neuen Wert belegt
+	\item Mittels einer \texttt{WHERE}-Bedingung kann die relevante Tupelmenge bestimmt werden. Die Selektionsbedingungen können logisch verknüpft werden (AND / OR)
+	\item Wird keine \texttt{WHERE}-Bedingung angegeben, so bezieht sich das Update auf \textit{alle} Tupel.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{Beispiele f\"ur Update-Operationen}\\[4pt]
+Nachname eines Mitarbeiters soll geändert werden.
+	\begin{lstlisting}[xleftmargin=3ex]
+UPDATE Person
+SET Name  = "Mustermann"
+WHERE ID = 3;
+		\end{lstlisting}
+\abs
+Alle Mitarbeiter aus Mannheim mit Gehalt unter 20.000 EUR sollen 10\% mehr Gehalt bekommen
+	\begin{lstlisting}[xleftmargin=3ex]
+UPDATE Mitarbeiter
+SET Gehalt  = Gehalt * 1.1
+WHERE Gehalt < 20000
+AND Ort  = "Mannheim";
+		\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{\textbf{Datens\"atze l\"oschen mit \texttt{DELETE}-Befehl}}\\[4pt]
+	\begin{block}{Allgemeine Syntax}
+	\begin{lstlisting}[xleftmargin=3ex, numbers=none]
+DELETE FROM <tabellenname> WHERE <selektionsbedingungen>;
+		\end{lstlisting}
+	\end{block}
+\abs\pause
+\begin{itemize}
+	\item Delete-Operation wird immer nur auf genau einer Relation ausgeführt
+	\item Alle Tupel, die der Selektionsbedingung entsprechen, werden gelöscht
+	\item Wird keine \texttt{WHERE}-Bedingung angegeben, so bezieht sich die Operation auf 
+	\textit{alle} Tupel
+\end{itemize}
+\pause
+\alert{Die meisten RDBMS fragen nicht nach! Delete-Operation wird sofort ausgeführt.}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+\structure{Beispiel}\\[4pt]
+Alle Kunden aus Mannheim sollen gelöscht werden:
+\begin{lstlisting}[xleftmargin=3ex, numbers=none]
+DELETE FROM Kunden WHERE Ort =  "Mannheim";
+\end{lstlisting}
+\end{frame}
+
+\subsection{Abfragen auf Relationen}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+	\structure{\textbf{Lesen von Datens\"atzen mit \texttt{SELECT}-Statement}}\\[4pt]
+	\begin{block}{Allgemeine Syntax -- wird sp\"ater noch erweitert}
+		\begin{lstlisting}[xleftmargin=3ex]
+SELECT [DISTINCT] <Attributliste>
+FROM <Tabellenliste>
+WHERE <Bedingungen>;
+		\end{lstlisting}
+	\end{block}
+\abs\pause
+	\begin{itemize}
+		\item \texttt{SELECT} umfasst die Operationen Produkt, Selektion, Projektion der 
+		relationalen Algebra -- wird sp\"ater noch durch Join-Operation erweitert
+		\item Produkt: Aus einer oder mehreren Tabellen aus \texttt{<Tabellenliste>}
+		\item Selektion: Selektionsbedingungen werden i.~S.~d.~relationalen Algebra in 
+		\texttt{<Bedingungen>} gesetzt
+		\item Projektion: Angabe der projizierten Attribute in \texttt{<Attributliste>} ($*$ erlaubt)
+		\item Duplikate werden durch optionales \texttt{DISTINCT} eliminiert. Beachte: SQL l\"asst 
+		\emph{Multisets} zu!
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Zusammenhang zur Relationalen Algebra}
+\begin{columns}
+\begin{column}{.48\textwidth}
+\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}[xleftmargin=2ex]
+SELECT [DISTINCT] a1, ... , an
+FROM R1, ... , Rm
+WHERE <theta>;
+\end{lstlisting}
+\end{column}
+\begin{column}{.48\textwidth}
+$\Pi_{a_1,\dots,a_n}(\sigma_\theta(R_1\times \dots \times R_m)$
+\end{column}
+\end{columns}
+\abs
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+\structure{\textbf{Beispiele}}\\[4pt]
+	\lstset{escapeinside={(*@}{@*)}}
+		\begin{lstlisting}[xleftmargin=3ex]
+SELECT * FROM Person; (*@\label{lst:select_plain}@*)
+SELECT Vorname FROM Person WHERE Name = "Meier"; (*@\label{lst:select_where}@*)
+SELECT DISTINCT Vorname FROM PERSON WHERE Name = "Meier"; (*@\label{lst:select_distinct}@*)
+		\end{lstlisting}
+\begin{itemize}
+	\item Zeile \ref{lst:select_plain}: gibt alle Tupel der Relation \texttt{Person} aus
+	\pause
+	\item Zeile \ref{lst:select_where}: gibt Vornamen aller Tupel, in denen Attribut 
+	\texttt{Name} den Wert \textit{Meier} hat -- mit Duplikaten
+	\pause
+	\item Zeile \ref{lst:select_distinct}: wie Zeile \ref{lst:select_where}, aber	ohne Duplikate
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection\ -- \texttt{null}-Werte und dreiwertige Logik}
+\textbf{Welches Ergebnis liefern die untenstehenden Anfragen?}
+\begin{table}
+	\centering
+	\footnotesize
+	\begin{tabular}{lll}\toprule
+		\multicolumn{3}{c}{\textbf{Kunden}}\\\midrule
+		Vorname & Nachname & Ort \\\midrule
+		Max & Mustermann & Siegen \\
+		Erika & Musterfrau & Mannheim \\
+		Heiner & Ott & \texttt{NULL} \\\bottomrule
+	\end{tabular}
+\end{table}
+\begin{columns}
+\begin{column}{.28\textwidth}
+\begin{lstlisting}[xleftmargin=2ex]
+SELECT Vorname, Nachname
+FROM Kunden
+WHERE Ort = "Mannheim"
+\end{lstlisting}
+\end{column}
+\begin{column}{.28\textwidth}
+\begin{lstlisting}[xleftmargin=2ex]
+SELECT Vorname, Nachname
+FROM Kunden
+WHERE NOT (Ort = "Mannheim")
+\end{lstlisting}
+\end{column}
+\end{columns}
+\pause
+In SQL werden die \texttt{WHERE}-Bedingungen f\"ur das  
+letzte Tupel weder zu \texttt{wahr} noch zu \texttt{falsch} ausgewertet, sondern zu 
+\texttt{unknown} -- dreiwertige Logik
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection\ -- \texttt{null}-Werte und dreiwertige Logik}
+\structure{\textbf{Aufgabe: Tupel mit leeren (\texttt{null}) Werten herausfiltern}}\\[4pt]
+\begin{itemize}
+	%\item In SQL wird unterschieden zwischen \texttt{wahr}, \texttt{falsch} und \texttt{unbekannt}
+	\item In SQL geben Vergleichsoperationen mit Argument \texttt{null} immer Wahrheitswert \texttt{unbekannt}
+	\item \texttt{SELECT} gibt nur Tupel aus, f\"ur die \texttt{where}-Bedingung \texttt{true} ist.
+	\item Daher Expliziter Test auf \texttt{null} durch: \texttt{is null} 
+\end{itemize}
+\vspace{1cm}
+\begin{columns}
+\begin{column}{.48\textwidth}
+\structure{Richtig:}
+\begin{lstlisting}[xleftmargin=3ex]
+SELECT Ort FROM Kunden
+WHERE Ort IS NULL
+\end{lstlisting}
+\end{column}
+\begin{column}{.48\textwidth}
+\alert{Falsch:}
+\begin{lstlisting}[xleftmargin=3ex]
+SELECT Ort FROM Kunden
+WHERE Ort = NULL
+\end{lstlisting}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}\frametitle{\insertsection}
+\framesubtitle{\insertsubsection\ -- \texttt{null}-Werte und dreiwertige Logik}
+\structure{\textbf{Exkurs: \texttt{null} und dreiwertige Logik in SQL}}\\[4pt]
+\begin{itemize}
+	\item In arithmetischen Ausdr\"ucken wird \texttt{null} propagiert: 
+	\begin{itemize}
+		\item $\texttt{null} + 1 = \texttt{null}$
+		\item $\texttt{null} \cdot 0 = \texttt{null}$		
+	\end{itemize}
+  \item Vergleichsoperationen $=,<,>,\le,\ge,\ne$ mit mindestens einem Argument \texttt{null}
+  ergeben den Wert \texttt{unknown}
+  	\begin{itemize}
+	   \item '$\texttt{null} < 1$' hat den Wert \texttt{unknown} 
+	   \item '$\texttt{null} = 1$' hat den Wert \texttt{unknown} 
+    \end{itemize}
+  \item \texttt{SELECT} gibt nur Tupel aus, f\"ur die \texttt{where}-Bedingung \texttt{true} ist.
+  \item Bei Gruppierung in einer Relation wird \texttt{null} als eigenst\"andiger Wert aufgefasst.
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{\insertsection}
+\framesubtitle{\insertsubsection\ -- \texttt{null}-Werte und dreiwertige Logik}
+\structure{\textbf{Exkurs: \texttt{null} und dreiwertige Logik in SQL}}\\[4pt]
+\structure{Wahrheitstafeln}
+\begin{columns}
+\begin{column}{0.5 \textwidth}
+\begin{center}
+	\begin{tabular}{c||c}
+		%\hline
+		$S$ & $\neg S$\\\hline\hline
+		f & t \\
+		t & f \\\hline
+		u & u \\
+		%\hline
+	\end{tabular}
+\end{center}
+\end{column}
+\begin{column}{0.6 \textwidth}
+%\begin{center}
+\begin{tabular}{c|c||c|c}
+	%\hline
+	$S$ & $T$ & $S \wedge T$ & $S \vee T$\\\hline\hline
+	t & t & t & t\\
+	t & f & f & t\\
+	f & t & f & t\\
+	f & f & f & f\\\hline
+	f & u & f & u\\
+	u & f & f & u\\
+	t & u & u & t\\
+	u & t & u & t\\
+	u & u & u & u\\
+	%\hline
+\end{tabular}
+%\end{center}
+\end{column}	
+\end{columns}
+\abs
+\hspace*{9em}t $\equiv$ true, f $\equiv$ false, u $\equiv$ unknown (\texttt{IS NULL})
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{\textbf{Relationen sind (Multi-)Mengen von Tupeln -- keine Ordnungsstruktur}}\\[4pt]
+Dennoch: Ordnung im \texttt{SELECT}-Ergebnis durch \texttt{ORDER BY} herstellbar.
+\begin{lstlisting}[xleftmargin=3ex]
+SELECT *
+FROM Person
+WHERE PLZ = 68165
+ORDER BY Vorname ;
+\end{lstlisting}
+\pause
+\abs
+Auch mehrere Attribute durch \texttt{ORDER BY} b\"undelbar. 
+\\
+Ordnungshierarchie dann lexikalisch nach Reihenfolge der Attribute.
+\\Beispiel: \texttt{ORDER BY Nachname, Vorname}
+\pause
+\abs
+\textbf{Beachte:} Rechenaufwand f\"ur '\texttt{ORDER BY}' bei laufzeitkritischen Operationen  
+auf gro\ss en Ergebnismengen nicht unterschätzen!
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Umbenennung von Attributen mit \texttt{AS}}}\\[4pt]
+Gegeben: Relation \texttt{Produkt(ProdId, Name, Nettopreis)}
+\abs
+\begin{lstlisting}[xleftmargin=3ex, numbers=none]
+SELECT ProdId AS ProduktID, Name AS ProduktName FROM Produkt;
+\end{lstlisting}
+\abs
+\structure{Ergebnis:}
+\begin{center}
+	\begin{tabular}{|c|c|}\hline
+		\multicolumn{2}{|c|}{\footnotesize \textbf{Produkt}}\\\hline\hline
+		\footnotesize \textbf{\key{ProduktID}} & \footnotesize \textbf{ProduktName}  \\\hline
+		\footnotesize 1 &\footnotesize Zahnpasta \\\hline
+		\footnotesize 2 & \footnotesize Kartoffeln \\\hline
+	\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{\textbf{Berechnungen im SELECT-Statement sind ebenfalls erlaubt}}\\[4pt]
+Beispiel: Relation \texttt{Produkt(ProdId, Name, Nettopreis)}
+\begin{lstlisting}[xleftmargin=3ex]
+SELECT
+  ProdId, Name, Nettopreis,
+  Nettopreis*1.19 AS Bruttopreis
+FROM Produkt;
+\end{lstlisting}
+\pause
+\structure{Ergebnis:}
+\begin{center}
+\begin{tabular}{|c|c|c|c|}\hline
+			\multicolumn{4}{|c|}{\footnotesize \textbf{Produkt}}\\\hline\hline
+			 \footnotesize \textbf{\key{ProdId}} & \footnotesize \textbf{Name} & \footnotesize \textbf{Nettopreis} &  \footnotesize \textbf{Bruttopreis}  \\\hline
+			\footnotesize 1 &\footnotesize Zahnpasta & 1.00 & 1.19 \\\hline
+			\footnotesize 2 & \footnotesize Kartoffeln & 1.50 & 1.785\\\hline
+\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide 
+\structure{{Abfragen auf mehreren Relationen durch Join}}\\[4pt]
+\begin{itemize}
+	\item Wiederholung: $\Join$ ist bedingte Selektion auf kartesischem Produkt zweier Relationen.
+	\item Join, ggf.~mit weiterer Projektion, erlaubt Abfrage von Attributen aus unterschiedlichen Relationen.
+	\item Fremdschl\"usselbeziehungen k\"onnen in einer Abfrage berücksichtigt werden.	
+\end{itemize}
+\pause 
+\abs
+Beispiel-Relationen:
+\begin{columns}
+	\begin{column}{.48\textwidth}
+		\begin{center}
+			\begin{tabular}{|c|c|c|}\hline
+				\multicolumn{3}{|c|}{\footnotesize \textbf{Kunde}}\\\hline\hline
+				\footnotesize \textbf{\key{KNR}} & \footnotesize \textbf{Vorname} & \footnotesize \textbf{Nachname}  \\\hline
+				\footnotesize 1 &\footnotesize Elsa &\footnotesize Musterfrau \\\hline
+				\footnotesize 2 & \footnotesize Max &\footnotesize  Mustermann  \\\hline				
+			\end{tabular}
+		\end{center}
+	\end{column}
+	\begin{column}{.48\textwidth}
+		\begin{center}
+			\begin{tabular}{|c|c|c|}\hline
+				\multicolumn{3}{|c|}{\footnotesize \textbf{Auftrag}}\\\hline\hline
+				\footnotesize \textbf{\key{ANR}} &\footnotesize{\textbf{KNR}} & \footnotesize \textbf{Datum}  \\\hline
+				\footnotesize 1001 &\footnotesize 1& \footnotesize 02.01.2013 \\\hline
+				\footnotesize 1002 &\footnotesize 2&\footnotesize  04.05.2013  \\\hline
+			\end{tabular}
+		\end{center}
+	\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Kartesisches Produkt: Join ohne Verbundbedingung}}\\[4pt]
+\texttt{SELECT * from Kunde,Auftrag;}
+\begin{columns}
+	\begin{column}{.48\textwidth}
+		\begin{center}
+			\begin{tabular}{|c|c|c|}\hline
+				\multicolumn{3}{|c|}{\footnotesize \textbf{Kunde}}\\\hline\hline
+				\footnotesize \textbf{\key{KNR}} & \footnotesize \textbf{Vorname} & \footnotesize \textbf{Nachname}  \\\hline
+				\footnotesize 1 &\footnotesize Elsa &\footnotesize Musterfrau \\\hline
+				\footnotesize 2 & \footnotesize Max &\footnotesize  Mustermann  \\\hline
+				
+			\end{tabular}
+		\end{center}
+	\end{column}
+	\begin{column}{.48\textwidth}
+		\begin{center}
+			\begin{tabular}{|c|c|c|}\hline
+				\multicolumn{3}{|c|}{\footnotesize \textbf{Auftrag}}\\\hline\hline
+				\footnotesize \textbf{\key{ANR}} &\footnotesize{\textbf{KNR}} & \footnotesize \textbf{Datum}  \\\hline
+				\footnotesize 1001 &\footnotesize 1& \footnotesize 02.01.2013 \\\hline
+				\footnotesize 1002 &\footnotesize 2&\footnotesize  04.05.2013  \\\hline
+			\end{tabular}
+		\end{center}
+	\end{column}
+\end{columns}
+\begin{center}
+	\begin{tabular}{|c|c|c|c|c|c|}\hline
+		\multicolumn{6}{|c|}{\footnotesize \textbf{\texttt{SELECT * from Kunde,Auftrag}}}\\\hline\hline
+		\footnotesize{\textbf{KNR}} & \footnotesize{\textbf{Vorname}} & \footnotesize{\textbf{Nachname}} &\footnotesize{\textbf{ANR}} &\footnotesize{\textbf{KNR}}& \footnotesize{\textbf{Datum}}\\\hline
+		1 & Elsa & Musterfrau & 1001 & 1 & 02.01.2013\\\hline
+		\cellcolor{Red}1 & Elsa & Musterfrau & 1002 & \cellcolor{Red}2 & 04.05.2013\\\hline
+		2 & $\dots$ &$\dots$ & $\dots$ &$\dots$  & $\dots$\\\hline
+	\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Join mit Vergleichsbedingung}}\\[4pt]
+\texttt{SELECT * from Kunde,Auftrag WHERE Kunde.KNR=Auftrag.KNR;}
+\begin{columns}
+	\begin{column}{.48\textwidth}
+		\begin{center}
+			\begin{tabular}{|c|c|c|}\hline
+				\multicolumn{3}{|c|}{\footnotesize \textbf{Kunde}}\\\hline\hline
+				\footnotesize \textbf{\key{KNR}} & \footnotesize \textbf{Vorname} & \footnotesize \textbf{Nachname}  \\\hline
+				\footnotesize 1 &\footnotesize Elsa &\footnotesize Musterfrau \\\hline
+				\footnotesize 2 & \footnotesize Max &\footnotesize  Mustermann  \\\hline				
+			\end{tabular}
+		\end{center}
+	\end{column}
+	\begin{column}{.48\textwidth}
+		\begin{center}
+			\begin{tabular}{|c|c|c|}\hline
+				\multicolumn{3}{|c|}{\footnotesize \textbf{Auftrag}}\\\hline\hline
+				\footnotesize \textbf{\key{ANR}} &\footnotesize{\textbf{KNR}} & \footnotesize \textbf{Datum}  \\\hline
+				\footnotesize 1001 &\footnotesize 1& \footnotesize 02.01.2013 \\\hline
+				\footnotesize 1002 &\footnotesize 2&\footnotesize  04.05.2013  \\\hline
+			\end{tabular}
+		\end{center}
+	\end{column}
+\end{columns}
+\begin{center}
+	\begin{tabular}{|c|c|c|c|c|c|}\hline
+		\multicolumn{6}{|c|}{\footnotesize \textbf{\texttt{SELECT * from Kunde,Auftrag WHERE Kunde.KNR=Auftrag.KNR}}}\\\hline\hline
+		\footnotesize{\textbf{KNR}} & \footnotesize{\textbf{Vorname}} & \footnotesize{\textbf{Nachname}} &\footnotesize{\textbf{ANR}} &\footnotesize{\textbf{KNR}}& \footnotesize{\textbf{Datum}}\\\hline
+		\cellcolor{Green}1 & Elsa & Musterfrau & 1001 & \cellcolor{Green}1 & 02.01.2013\\\hline
+		\cellcolor{Green}2 & Max & Mustermann & 1002 & \cellcolor{Green}2 & 04.05.2013\\\hline
+		$\dots$ & $\dots$ &$\dots$ & $\dots$ &$\dots$  & $\dots$\\\hline
+	\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Join-Operation auf unterschiedliche Arten ausdr\"uckbar}}\\[4pt]
+\begin{columns}
+\begin{column}{.48\textwidth}
+\begin{lstlisting}[xleftmargin=3ex]
+SELECT *
+FROM Kunde, Auftrag
+WHERE Kunde.KNR = Auftrag.KNR
+\end{lstlisting}
+\end{column}
+\begin{column}{.48\textwidth}
+\begin{lstlisting}[xleftmargin=3ex]
+SELECT *
+FROM KUNDE JOIN Auftrag
+ON Kunde.KNR = Auftrag.KNR
+\end{lstlisting}
+\end{column}
+\end{columns}
+Beide Statements liefern gleiches Resultat.\\
+Rechte Variante erzwingt genauere Formulierung.
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Diverse Join-Typen}}\\[4pt]
+	\begin{itemize}
+		\item Equi Joins: \texttt{JOIN} und \texttt{NATURAL JOIN}: z.B. \texttt{ON Auftrag.KNR = Kunde.KNR}
+		\item Allgemeine Joins: Auch andere Vergleichsoperatoren ($<,\leq,\neq,\geq,>$) etc.~zul\"assig -- in der \texttt{ON}-Bedingung
+		\item Mehr als zwei Relationen: Multi Join 
+		\item Join mit sich selbst: Self Join
+		\begin{itemize}
+			\item Q: Wie werden die einzelnen Attribute voneinander unterschieden?
+			\item A: \"Uber \textit{Tupel-Variablen}
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{\textbf{Zusammenfassung Syntax: Join, Outer Join, Equi Join, Natural Join}}\\[4pt]
+Seien \texttt{T1} und \texttt{T2} zwei Relationen/Tabellen mit entsprechenden Attributen.
+\pause 
+\abs
+SQL Join Statement:
+\begin{lstlisting}[xleftmargin=3ex, numbers=none]
+SELECT * FROM <join expression>;
+\end{lstlisting}
+\pause
+mit \texttt{<\textbf{join} expression>}:
+\begin{columns}
+\begin{column}{.98\textwidth}
+\begin{lstlisting}[xleftmargin=3ex,numbers=none]
+T1 { JOIN | { LEFT | RIGHT | FULL } OUTER JOIN} T2 ON boolean_expression
+	
+T1 { JOIN | { LEFT | RIGHT | FULL } OUTER JOIN} T2 USING ( join column list )
+	
+T1 NATURAL { JOIN | { LEFT | RIGHT | FULL } OUTER JOIN} T2
+\end{lstlisting}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{\textbf{Zusammenfassung Syntax: Join, Outer Join, Equi Join, Natural Join}}\\[4pt]
+Beispiele
+\abs
+JOIN
+\begin{lstlisting}[xleftmargin=3ex, numbers=none]
+SELECT * FROM Kunde JOIN Auftrag ON (Kunde.KNR > Auftrag.KNR);
+\end{lstlisting}
+\abs
+Equi JOIN
+\begin{lstlisting}[xleftmargin=3ex, numbers=none]
+SELECT * FROM Kunde JOIN Auftrag USING (KNR);
+\end{lstlisting}
+\abs 
+NATURAL JOIN
+\begin{lstlisting}[xleftmargin=3ex, numbers=none]
+SELECT * FROM Kunde NATURAL JOIN Auftrag;
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{\textbf{Zusammenfassung Syntax: Join, Outer Join, Equi Join, Natural Join}}\\[4pt]
+Beispiele
+\abs
+LEFT OUTER JOIN
+\begin{lstlisting}[xleftmargin=3ex, numbers=none]
+SELECT * FROM Kunde LEFT OUTER JOIN Auftrag ON (Kunde.KNR > Auftrag.KNR);
+\end{lstlisting}
+\abs
+Equi RIGHT OUTER JOIN
+\begin{lstlisting}[xleftmargin=3ex, numbers=none]
+SELECT * FROM Kunde RIGHT OUTER JOIN Auftrag USING (KNR);
+\end{lstlisting}
+\abs 
+NATURAL FULL OUTER JOIN
+\begin{lstlisting}[xleftmargin=3ex, numbers=none]
+SELECT * FROM Kunde NATURAL FULL OUTER JOIN Auftrag;
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Self Join}}\\[4pt]
+Gegeben sei die folgende Relation:
+\begin{center}
+	\begin{tabular}{|c|c|c|}\hline
+		\multicolumn{3}{|c|}{\footnotesize \textbf{MitarbVorges}}\\\hline\hline
+		\footnotesize \textbf{\key{MNR}} &\footnotesize{\textbf{Name}} & \footnotesize \textbf{Vorgesetzter}  \\\hline
+		\footnotesize 1 &\footnotesize Meier& \footnotesize \\\hline
+		\footnotesize 2 &\footnotesize Müller&\footnotesize  1 \\\hline
+		\footnotesize 3 &\footnotesize Schulze&\footnotesize  1 \\\hline
+	\end{tabular}
+\end{center}
+Jedem Mitarbeiter wird -- falls vorhanden -- ein Vorgesetzter zugeordnet.\\[4pt]
+Aufgabe: Liste aller Mitarbeiter mit den entsprecheden Vorgesetzten
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide 
+\structure{\textbf{Self Join}}\\[4pt]
+\alert{So nicht:}
+\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}[xleftmargin=3ex]
+SELECT MitarbVorges.MNR, MitarbVorges.Name, MitarbVorges.Vorgesetzter
+FROM MitarbVorges
+WHERE MitarbVorges.Vorgesetzter = MitarbVorges.MNR; (*@\label{lst:selfjoin}@*)
+\end{lstlisting}
+\pause
+Denn: Ergebnis durch die \texttt{WHERE}-Bedingung in Zeile \ref{lst:selfjoin} ist leere Menge.\\
+Weil: Mitarbeiter ist nicht sein eigener Vorgesetzter.
+\pause\abs 
+L\"osung: Relationen-Variablen zur Unterscheidung verschiedener Instanzen der Relation
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{\textbf{Self Join}}\\[4pt]
+Korrekt:
+\begin{lstlisting}[xleftmargin=3ex]
+SELECT M1.MNR, M1.Name, M1.Vorgesetzter,M2.MNR, M2.Name, M2.Vorgesetzter
+FROM MitarbVorges M1, MitarbVorges M2
+WHERE M1.Vorgesetzter = M2.MNR;
+\end{lstlisting}
+%\pause
+%Weitere Optimierung zur besseren Lesbarkeit:\\
+%Attribute durch Operator \texttt{AS} in aussagekräftige Attributnamen umbenennen.
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Noch einmal: Kartesisches Produkt}}\\[4pt]
+Seien $T1$ und $T2$ zwei Relationen/Tabellen
+\abs
+Zwei SQL Statements f\"ur kartesisches Produkt $T1\times T2$:
+\abs
+\begin{lstlisting}[xleftmargin=3ex, numbers=none]
+SELECT * FROM T1,T2;
+\end{lstlisting}
+\abs
+oder
+\abs
+\begin{lstlisting}[xleftmargin=3ex, numbers=none]
+SELECT * FROM T1 CROSS JOIN T2;
+\end{lstlisting}
+\end{frame}
+
+\subsection{Mengenoperationen}
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{\textbf{Mengenoperationen \textit{Schnitt, Vereinigung, Differenz}}}\\[4pt]
+\begin{description}[leftmargin=0cm]
+	\item[\texttt{UNION}] Bilden der Vereinigungsmenge
+	\item[\texttt{EXCEPT}] Bilden der Differenzmenge
+	\item[\texttt{INTERSECT}] Bilden der Schnittmenge
+\end{description}
+\abs
+Die Operatoren verkn\"upfen zwei \texttt{SELECT}-Statements oder Queries.\\
+Alle Mengenoperationen setzen Schemagleichheit der beteiligten Queries voraus.
+\pause 
+\abs
+\alert{Achtung: Keine einheiliche Implementierung in diversen RDBMS.\\
+	Lediglich \texttt{UNION} übergreifend vorhanden.}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Mengenoperationen \textit{Schnitt, Vereinigung, Differenz}}}\\[4pt]
+\structure{Beispiel \texttt{UNION}}
+\begin{lstlisting}[xleftmargin=3ex]
+SELECT * FROM S
+UNION
+SELECT * FROM T ;
+\end{lstlisting}
+\abs
+In diesem Beispiel: Vereinigungsmenge der beiden Relationen $S$ und $T$. 
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{\textbf{Mengenoperationen \textit{Schnitt, Vereinigung, Differenz}}}\\[4pt]
+\structure{Syntax:}
+\begin{lstlisting}[xleftmargin=3ex]
+<query1> UNION [ALL] <query2>
+<query1> INTERSECT [ALL] <query2>
+<query1> EXCEPT [ALL] >query2>
+\end{lstlisting}
+\abs
+Durch \texttt{[ALL]} werden Duplikate berücksichtigt.
+\end{frame}
+
+\subsection{Inner Selects / Nested Selects}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{SQL-Anfragen können geschachtelt werden, um komplexe Fragestellungen abzubilden.}\\[4pt]
+Gegeben seien die folgenden Relationen:
+\begin{center}
+	\begin{tabular}{|c|c|c|}\hline
+		\multicolumn{3}{|c|}{\footnotesize \textbf{Lieferung}}\\\hline\hline
+		\footnotesize \textbf{\key{LNR}} &\footnotesize{\textbf{KNR}} & \footnotesize \textbf{Betrag}  \\\hline
+		\footnotesize 65 &\footnotesize 1001& \footnotesize 2500\\\hline
+		\footnotesize 66 &\footnotesize 1002&\footnotesize  900 \\\hline
+		\footnotesize 67 &\footnotesize 1003&\footnotesize  1100 \\\hline
+	\end{tabular}
+	\hspace{2mm}
+	\begin{tabular}{|c|c|c|}\hline
+		\multicolumn{3}{|c|}{\footnotesize \textbf{Kunden}}\\\hline\hline
+		\footnotesize \textbf{\key{KNR}} &\footnotesize{\textbf{Vorname}} & \footnotesize \textbf{Nachname}  \\\hline
+		\footnotesize 1001 &\footnotesize Max& \footnotesize Mustermann \\\hline
+		\footnotesize 1002 &\footnotesize Erika&\footnotesize  Musterfrau \\\hline
+		\footnotesize 1003 &\footnotesize Hans&\footnotesize  Schulze \\\hline
+	\end{tabular}
+\end{center}
+\pause 
+\abs 
+Aufgabe: Generierung einer Liste aller Kunden, die eine Lieferung mit einem Einzelwert von mehr als 1000 Euro erhalten haben.
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Lösung:}
+\begin{lstlisting}[xleftmargin=3ex]
+SELECT * FROM Kunde
+WHERE
+KNR IN (SELECT DISTINCT KNR FROM Lieferung WHERE Betrag > 1000);
+\end{lstlisting}
+\begin{center}
+\begin{tabular}{|c|c|c|}\hline
+	\multicolumn{3}{|c|}{\footnotesize $\rho_{\texttt{Kunde}\leftarrow KNR, \texttt{AnzahlLief}\leftarrow CNT(*)
+	\texttt{Gesamtwert}\leftarrow SUM(Betrag)}, 
+		\Gamma_{KNR;CNT(*),SUM(Betrag)}(Lieferungen)$\textbf{Ergebnis}}\\\hline\hline
+	\footnotesize \textbf{\key{KNR}} &\footnotesize{\textbf{Vorname}} & \footnotesize \textbf{Nachname}  \\\hline
+	\footnotesize 1001 &\footnotesize Max& \footnotesize Mustermann \\\hline
+	\footnotesize 1003 &\footnotesize Hans&\footnotesize  Schulze \\\hline
+\end{tabular}
+\end{center}
+\abs 
+Inner Select erzeugt Liste mit Kundennummern, die für den Outer Select von Relevanz sind.
+\end{frame}
+
+\subsection{Gruppierung und Aggregation}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{\textbf{Erinnerung: Gruppierungs- und Aggregationsvariablen}}\\[4pt]
+\begin{itemize}
+\item \texttt{GROUP BY}: Gruppenbildung bezüglich der Werte in den Gruppierungsattributen
+\begin{itemize}
+\item Ein Wertetupel $(g_1,\ldots g_k)$ der Gruppierungsattribute identifiziert eine Gruppe.
+\end{itemize}
+\item Aggreagtion der Werte eines Aggregationsattributs in jeder Gruppe durch Aggregatfunktion
+\pause
+\item Aggregatfunktion berechnet Wert anhand einer Menge von Eingangswerten des Aggregationsattributs
+\begin{description}[leftmargin=0cm]
+\item[\texttt{SUM()}] Berechnet eine Summe einer Menge von Attributwerten
+\item[\texttt{AVG()}] Berechnet den Durchschnitt einer Menge von Attributwerten
+\item[\texttt{MIN()}] Berechnet das Minimum einer Menge von Attributwerten
+\item[\texttt{MAX()}] Berechnet das Maximum einer Menge von Attributwerten
+\item[\texttt{COUNT()}] Berechnet die Anzahl der Elemente in einer Menge von Attributwerten
+\end{description}
+\pause
+\item Resultierende Relation besteht aus Gruppierungsattributen und aggregierten Aggregatsvavriablen
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide 
+\structure{Beispiel: Wie viele Lieferungen zu welchem Gesamtwert hat ein Kunde bekommen?}\\[4pt]
+Schema \texttt{Lieferungen(\key{LFNR},KNR,BETRAG)}
+\begin{columns}
+	\begin{column}{.48\textwidth}
+		\begin{lstlisting}[xleftmargin=3ex]
+		SELECT
+		KNR AS Kunde,
+		count(*) AS AnzahlLief,
+		sum(BETRAG) AS Gesamtwert
+		FROM
+		Lieferungen
+		GROUP BY KNR
+		\end{lstlisting}
+	\end{column}
+	\begin{column}{.48\textwidth}
+		\begin{center}
+			\begin{tabular}{|c|c|c|}\hline
+				\multicolumn{3}{|c|}{\footnotesize \textbf{Ergebnis}}\\\hline\hline
+				\footnotesize{\textbf{Kunde}} &\footnotesize{\textbf{AnzahlLief}} &\footnotesize{\textbf{Gesamtwert}}  \\\hline
+				\footnotesize 1001 &\footnotesize 12& \footnotesize 13245 \\\hline
+				\footnotesize 1002 &\footnotesize 7& \footnotesize 10245 \\\hline
+				\footnotesize 1003 &\footnotesize 1&\footnotesize  98 \\\hline
+			\end{tabular}
+		\end{center}
+	\end{column}
+\end{columns}
+\pause
+\abs 
+Genauer gilt:\nl
+\textbf{Ergebnis} $=\rho_{\texttt{Kunde}\leftarrow KNR, \texttt{AnzahlLief}\leftarrow CNT(*),
+	\texttt{Gesamtwert}\leftarrow SUM(Betrag)}\circ 
+\Gamma_{KNR;CNT(*),SUM(Betrag)}(Lieferungen)$
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{Bedingungen auf Aggregaten nicht durch \texttt{WHERE}-Klausel auswertbar, da 
+\texttt{WHERE}-Klausel \textit{vor} Aggregatbildung ausgewertet wird.}\\[8pt]
+\pause
+\begin{columns}
+\begin{column}{.48\textwidth}
+\alert{Falsch:}
+\begin{lstlisting}[xleftmargin=3ex]
+SELECT
+KNR, count(*) AS AnzahlLief,
+sum(Betrag) AS Gesamtwert
+FROM
+Lieferung
+WHERE Gesamtwert > 10000
+GROUP BY KNR ;
+\end{lstlisting}
+\end{column}
+\pause 
+\begin{column}{.48\textwidth}
+\structure{Richtig:}
+\begin{lstlisting}[xleftmargin=3ex]
+SELECT
+KNR, count(*) AS AnzahlLief,
+sum(Betrag) AS Gesamtwert
+FROM
+Lieferung
+GROUP BY KNR
+HAVING Gesamtwert > 10000 ;
+\end{lstlisting}
+\end{column}
+\end{columns}
+\abs 
+\texttt{HAVING}-Operator arbeitet wie \texttt{WHERE}-Operator, wird jedoch erst nach vollendeter Aggregation ausgewertet.
+\end{frame}
+
+\subsection{Common Table Expressions}
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Hilfstabellen}}\\[4pt]
+\structure{Manchmal werden Statements benötigt, die auf einer Hilfstabelle arbeiten -- Common Table Expressions}
+\abs
+\begin{lstlisting}[xleftmargin=3ex]
+WITH  monatsumsatz AS (
+SELECT jahr, monat sum(umsatz) as u_monat
+FROM umsatz
+GROUP BY jahr, monat
+)
+SELECT max(monatsumsatz.u_monat) ;
+\end{lstlisting}
+\end{frame}
+
+\section{Views und Index-Strukturen}
+\subsection{Allgemeines zu Views und Index-Strukturen}
+
+\againframe<2>{ansisparc}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}\framesubtitle{\insertsubsection}
+\structure{\textbf{View}}\\[4pt]
+\begin{itemize}
+	\item virtuelle Tabelle einer Datenbank
+	\item erm\"oglicht Benutzer/Anwendung eine Sicht auf die Daten (logische Datenunabhängigkeit)
+\end{itemize} 
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{\textbf{View}}\\[4pt]
+\structure{Beispiel:}
+\begin{lstlisting}[xleftmargin=3ex]
+CREATE VIEW AnzahlGesamtwert AS
+SELECT
+ KNR, count(*) AS AnzahlLief,
+ sum(Betrag) AS Gesamtwert
+FROM
+ Lieferung
+GROUP BY KNR
+HAVING Gesamtwert > 10000 ;
+\end{lstlisting}
+\pause 
+View kann nun wie eine Relation (z.B. \texttt{SELECT * from AnzahlGesamtwert}) abgefragt werden. 
+\nl
+Die Werte werden jedes Mal neu berechnet.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}\framesubtitle{\insertsubsection}
+\structure{\textbf{Index (Werteverzeichnis)}}\\[4pt]
+\begin{itemize}
+	\item Index wird verwendet, um Daten einer Tabelle sehr schnell abfragen zu k\"onnen
+	\item Index für Abfrage von einer oder mehrerer Spalten einer Tabelle 
+	\item Anwender/Anwendungen sehen Indizes nicht
+\end{itemize}
+\abs
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}\framesubtitle{\insertsubsection}
+\structure{\textbf{Index (Werteverzeichnis)}}\\[4pt]
+\begin{itemize}
+\item Update einer Tabelle mit Index dauert l\"anger als Update ohne Index $\rightarrow$ Index wird auch aktualisiert
+\begin{itemize}
+	\item Tabelle mit hoher Modifikationsrate sollte keine Indizes haben
+	\item Indizes geeignet f\"ur Tabellen mit niedriger Modifikationsrate und h\"aufigen Abfragen 
+\end{itemize}
+\item Index ist Verzeichnis, das f\"ur Attributwerte deren Speicherort angibt 
+$\rightarrow$ Art Telefonbuch
+\item Indizes werden in Vorlesung \textit{Datenbanktechnik} ausführlich behandelt
+\end{itemize}
+\abs
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}\framesubtitle{\insertsubsection}
+\onslide
+\structure{\textbf{Index (Werteverzeichnis)}}\\[4pt]
+\structure{Syntax:}
+\begin{lstlisting}[xleftmargin=3ex,numbers=none]
+CREATE INDEX <index_name> ON <table_name>(<column1>,<column2>,...); 
+\end{lstlisting}
+\pause\abs
+\structure{Beispiel:}
+\begin{lstlisting}[xleftmargin=3ex,numbers=none]
+CREATE INDEX idxPLZ ON Anschriften(PLZ)
+\end{lstlisting}
+Index \texttt{idxPLZ} auf Attribut \texttt{PLZ} der Relation \texttt{Anschriften}.
+\nl
+Damit schnellere Abfrage bez\"uglich Attribut \texttt{PLZ} auf Relation \texttt{Anschriften} m\"oglich.
+\end{frame}
+
+%\section*{Zusammenfassung}
+
+%\begin{frame}{Zusammenfassung}
+%	\begin{itemize}
+%		\item Grundlagen von SQL
+%		\item DDL-Statements
+%		\begin{itemize}
+%			\item Datenbanken und Relationen erzeugen
+%			\item Integritätsbedingungen
+%		\end{itemize}
+%		\item DML-Statements
+%		\begin{itemize}
+%			\item Einfügen und Modifizieren
+%			\item Lesen von Datenbeständen
+%			\begin{itemize}
+%				\item In einer Relation
+%				\item In mehreren Relationen über Verbünde
+%			\end{itemize}
+%			\item Mengenoperationen
+%			\item Inner Selects
+%			\item Aggregationen
+%		\end{itemize}
+%		\item Views und Indizes
+%	\end{itemize}
+%
+%\end{frame}

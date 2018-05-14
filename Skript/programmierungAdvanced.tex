@@ -1,0 +1,508 @@
+%!TEX root = Slides.tex
+\part{Fortgeschrittene Datenbankprogrammierung}
+\label{part:programmierungAdvanced}
+
+\section{JDBC}
+\subsection{Connection Pooling}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Verbindungsauf- und -abbau ist Flaschenhals bei Datenbankprogrammierung}
+\begin{itemize}
+	\item Verbindungsaufbau kostet im Allgemeinen sehr viel Zeit 
+	\item Auf einzelner Verbindung kann nicht parallel gearbeitet werden. Mehrere Threads müssen 
+	eigene Verbindungsobjekte erzeugen.
+\end{itemize}
+\onslide\pause 
+\begin{block}{Connection Pooling}
+	\begin{itemize}
+		\item Mehre Verbindungen werden beim Start der Anwendung aufgebaut und in Pool gehalten
+		\item Verbindungen aus Pool können sofort verwendet werden
+		\item Nicht mehr benötigte Verbindungen werden nicht abgebaut, sondern in Pool zurückgegeben 
+		\item Parameter steuern Verhalten des Pools -- wie viele Verbindungen usw.
+	\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Connection Pooling muss nicht selbst implementiert werden}
+\abs
+Verwende Bibliotheken f\"ur JDBC-konformes Connection Pooling. 
+\nl
+Beispiel: Open Source Bibliothek C3PO.
+\abs
+\onslide\pause
+\begin{itemize}
+\item C3PO verf\"ugbar unter \url{http://sourceforge.net/projects/c3p0/}
+\item Paket muss im \texttt{CLASSPATH} liegen und kann sofort verwendet werden
+\item Verbindungen zu Datenbanken werden über eigene Datenquelle (Data Source) bereitgestellt
+\end{itemize} 
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection\ -- Code-Beispiel}
+\begin{lstlisting}[xleftmargin=3ex, showstringspaces=false, language=Java]
+//Erstellen einer Datenquelle
+ComboPooledDataSource cpds = new ComboPooledDataSource(); 
+cpds.setDriverClass("org.postgresql.Driver");
+cpds.setJdbcUrl("jdbc:postgresql://<host><:port></database>");
+cpds.setUser("db");
+cpds.setPassword("db"); 
+cpds.setMinPoolSize(5); 
+cpds.setAcquireIncrement(5);
+cpds.setMaxPoolSize(100); 
+
+//Verwendung der Datenquelle
+Connection con1 = cpds.getConnection();
+Connection con2 = cpds.getConnection();
+...
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection\ -- Web App Server}
+\structure{Die meisten Web Application Server verf"ugen über eigenes Connection Pooling mittels JNDI}
+\vspace{3mm}
+Beispiel Apache Tomcat: Deskriptor \texttt{server.xml} und Java-Code gegenübergestellt
+\begin{columns}
+  \begin{column}{.48\textwidth}
+  	\lstset{language=xml}
+		\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}[xleftmargin=3ex, basicstyle=\ttfamily\tiny, showstringspaces=false]
+<Context>
+ <Resource name="jdbc/TestDB" 
+  auth="Container" type="javax.sql.DataSource" 
+  maxActive="100" 
+  maxIdle="30" 
+  maxWait="1000" 
+  username="<user>" 
+  password="<password>" 
+  driverClassName="org.postgresql.Driver"
+  url="jdbc:postgresql://<host><:port></database>"/> 
+</Context>
+\end{lstlisting}
+	\end{column}
+	\begin{column}{.48\textwidth}
+\lstset{language=Java}
+			\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}[xleftmargin=3ex, basicstyle=\ttfamily\tiny, showstringspaces=false, language=Java]
+//Initialisierung
+Context initContext = new InitialContext(); 
+Context envContext = 
+  (Context)initContext.lookup("java:/comp/env");
+DataSource ds = 
+  (DataSource)envContext.lookup("jdbc/TestDB");
+			
+//Jetzt kann Verbindung angefordert werden
+Connection conn = ds.getConnection(); 
+\end{lstlisting}
+  \end{column}
+\end{columns}
+Web App Server verwaltet eigenen Connection Pool und stellt ihn Java-Anwendungen zur Verf\"ugung
+\end{frame}
+
+\subsection{Entwicklung von Anwendungen mit Datenbankanbindung}
+
+\begin{frame}
+	\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{Wie es \textbf{nicht} geht:}
+	\begin{itemize}
+		\item Datenbankverbindungen und -abfragen im Code verstreuen
+		\item Immer wieder durch ResultSets iterieren und quasi tabellarisch arbeiten
+	\end{itemize}
+\abs
+	\structure{Stattdessen:}
+	\begin{itemize}
+		\item Entwerfen einer geeigneten Softwarearchitektur
+		\item Nutzung der M\"oglichkeiten der Objektorientierung
+	\end{itemize}	
+\end{frame}
+
+\begin{frame}
+	\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\onslide
+	\structure{Systematischer Aufbau:}
+	\begin{itemize}
+		\item Entwurf von Containerklassen f\"ur die Entit\"aten und Relationenschemata
+		\begin{itemize}
+			\item Verwendung von getter- und setter-Methoden
+		\end{itemize}
+ 	  \pause
+		\item Entwurf einer Zugriffsschnittstelle, die auf Containerklassen zugreift
+		\pause
+		\item Implementierung der Zugriffsschnittstelle f\"ur die konkrete Datenbank
+		\pause
+		\item Zugriff auf die Daten im Code \textit{ausschließlich über Zugriffsschnittstelle}
+		\begin{itemize}
+			\item ... am besten mittels Generator- oder Factory-Klasse
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection\ -- Beispiel}
+	Containerklasse f\"ur Relationenschema
+	\nl
+	\texttt{\small Auto(int ID, varchar Name, varchar Marke, int[3] Farbe, int Leistung)}:
+\begin{lstlisting}[xleftmargin=3ex, language=Java]
+public class Auto{
+ private int id; 		
+ private int[] farbe; 		
+ private int power; 
+ ...
+
+ public Auto() {farbe = new int[3];}
+
+ public void setID(int id) {this.id = id;}
+ public int getID() {return this.id;}
+
+ public void setFarbe(int[] farbe) {this.farbe = farbe;}
+ public int[] getFarbe() {return this.farbe;}
+
+ public void setLeistung(int leistung) {this.power = leistung;}
+ public int getLeistung() {return this.power;}
+ ...
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection\ -- Beispiel}
+	\structure{Zugriffsinterface}
+\begin{lstlisting}[xleftmargin=3ex, language=Java]
+public interface IRepository{
+  public Auto createAuto(); 
+		
+  public Auto[] lookupAutoByFarbe(char[] farbe); 
+  		
+  public Auto[] lookupAutoByLeisung(int leistung); 
+
+  public Auto lookupAutoById(int id); 
+		
+  public void saveAuto(Auto a); 	
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection\ -- Beispiel}
+	\structure{Implementierungsklasse von Zugriffsinterface f\"ur PostgreSQL:}
+\begin{lstlisting}[xleftmargin=3ex, showstringspaces=false, language=Java]
+public class PostgreSQLRepository implements IRepository{
+  private Connection con; 
+  ... 
+  
+  public Auto lookupAutoById(int id){
+    PreparedStatement pst = new PreparedStatement("SELECT * from Auto WHERE id = ?"); 
+    pst.setInt(1,id); 
+    ResultSet rs = pst.execute(); 
+    Auto a = new Auto(); 
+    
+    while (rs.next()){
+      a.setId(rs.getInt(0));
+      a.setFarbe(rs.getFarbe(3));
+      ...
+    }
+    return a;
+  }
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection\ -- Beispiel}
+\structure{Factory-Klasse zur Erzeugung von Zugriffsinterfaces}
+\begin{lstlisting}[xleftmargin=3ex, showstringspaces=false, language=Java]
+public class RepoFactory{
+  ...
+  public static IRepository createRepository(ConfigObject config){
+    if (config.getDatabase() == "Postgresql"){
+      ...
+      return new PostgreSQLRepository(); 
+    } 
+    else if (config.getDatabase() == "MySQL"){
+      ...
+      return new MySQLRepository(); 
+    }
+  }
+}
+\end{lstlisting}
+Annahme: Config-Objekt \texttt{config} Konfigurationsdatei, in der die Datenbank konfiguriert wird.
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Zusammenfassung: Verwendung der Klassen}
+\begin{lstlisting}[xleftmargin=3ex, showstringspaces=false, language=Java]
+public static void main(String args[]){
+  
+  ConfigObject config = ...
+  
+  IRepository repo = RepoFactory.createRepository(config); 
+  Auto auto = new Auto();
+  auto.setLeistung(120);
+  repo.saveAuto(auto)
+  repo.lookupAutoByLeistung(120);
+  
+  Auto nocheinauto = new Auto(); 
+  nocheinauto.setFarbe("schwarz");
+  repo.saveAuto(nocheinauto);   
+}
+\end{lstlisting}
+\end{frame}
+
+\section{Objekt-relationales Mapping}
+\subsection{Begriffserklärung}
+
+\begin{frame}[t]\frametitle{Objekt-relationales Mapping}
+    \framesubtitle{Begriffserklärung}
+    \structure{Objektorientierte Welt: Objekte haben starke Strukturierung}
+    \begin{itemize}
+    	\item Schachtelung und komplexe Abhängigkeiten von Objekten
+    	\item Vererbungshierarchien 
+    	\item Schnittstellenkonzepte
+    	\item Polymorphie und abstrakte Klassen
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{Objekt-relationales Mapping}
+\framesubtitle{Begriffserklärung}
+\structure{Relationale Welt:}
+\begin{itemize}
+	\item Tabellen sind "flach"
+	\item Abhängigkeiten \"uber referentielle Integrit\"at 
+	\item Keine inher\"anten Vererbungs-, Methoden- oder Schnittstellenkonzepte
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{Objekt-relationales Mapping}
+\framesubtitle{Begriffserklärung}
+\onslide
+\structure{Br\"ucke zwischen den Welten}
+\begin{itemize}
+	\item Versuch des Mapping zwischen objektorientierter und relationaler Welt 
+	\item Mittels \textit{Object Flattening} werden strukturierte Objekte auf flache Tabellen und Schemata abgebildet
+	\item Object Flattening erlaubt nur in gewissem Umfang die R\"uckabbildung von Schemata in Objekte
+\end{itemize}
+\pause
+\begin{definition}[Object-Relational Impedance Mismatch]
+	Unter dem Begriff \textit{Object-Relational Impedance Mismatch} wird die grundlegende Unverträglichkeit 
+	von objektorientierten Programmiersprachen mit den Konzepten relationaler Datenbanken verstanden. 
+	Es besteht ein \textit{Paradigmenkonflikt}.	
+\end{definition}
+\end{frame}
+
+\againframe<2>{isa}
+
+\begin{frame}[t]\frametitle{Objekt-relationales Mapping}
+\framesubtitle{Ansätze für die Abbildung von is-a -- Beziehungen}
+\structure{Es wurden verschiedene Möglichkeiten diskutiert:}
+\onslide
+\begin{itemize}
+	\item One Table per Class Hierarchy 
+	\begin{itemize}
+		\item Attribute aller Entit\"aten der Klassenhierarchie in gemeinsames Relationenschema. 
+		\item Unterscheidung der Entit\"aten durch Diskriminator-Attribut.
+		\item \textbf{Problem:} Ansatz einfach zu implementieren, provoziert jedoch \texttt{null}-Werte und wird f\"ur 
+		komplexere Hierarchien schwer wartbar.\\[4pt]
+		%\item Normalisierung? 
+	\end{itemize}
+	\pause
+	\item One Table per Concrete Class 
+	\begin{itemize}
+		\item Alle konkreten Klassen in eigenem Relationenschema.
+		\item \textbf{Problem:} Informationen der Vererbung gehen verloren. Abstrakte Klasse existiert nicht mehr im Datenmodell.\\[4pt]
+	\end{itemize}
+	\pause
+	\item One Table per Class
+	\begin{itemize}
+		\item Alle Klassen (auch die abstrakten) werden in eigenem Relationenschema abgebildet.
+		\item \textbf{Problem:} Alle Vererbungsinformationen vorhanden, aber erhöhter Join-Aufwand 						
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{Objekt-relationales Mapping}
+\framesubtitle{Verschiedene Konzepte}
+\alert{Fazit: O-R-Mapping ist grundsätzliches Abbildungsproblem. Es gibt keine einheitliche Lösung.}
+\abs
+Entwickler arbeiten auf Objekten und m\"ussen Speicherung der Daten und Zerlegung der Objekte in Relationen manuell durchführen.
+\abs
+Dazu gibt es verschiedene Ansätze:
+\onslide\pause
+\begin{itemize}
+	\item Objektorientierte Datenbanken 
+	\begin{itemize}
+		\item Objekte k\"onnen direkt in Datenbank abgelegt werden
+		\item Nicht standardisiert. Auslesen der Objekte nur mit Hilfe der Anwendung möglich
+		\item F\"ur spezielle Anwendungsfälle
+	\end{itemize}
+	\pause
+	\item Erweiterung objektorientierter Programmiersprachen um relationale Konzepte
+	\begin{itemize}
+		\item SQL direkt im Code eingebettet
+		\item Lösung widerspricht in großen Teilen objektorientierten Ansätzen
+		\item Wird in der heutigen Entwicklung fast nicht mehr eingesetzt
+	\end{itemize}
+	\pause
+	\item O/R-Mapper ...
+\end{itemize}
+\end{frame}
+
+\subsection{O/R-Mapper}
+
+\begin{frame}[t]\frametitle{Objekt-relationales Mapping}
+	\framesubtitle{O/R-Mapper Allgemein}
+	\structure{O/R-Mapper bilden eine Zwischenschicht zwischen Anwendung und Datenbank}
+  \onslide
+	\begin{itemize}
+		\item Sie erledigen das Mapping von Objekten auf Relationen 
+		\item Transparent für Anwendungsentwicklung
+		\item Weite Verbreitung\\[8pt]
+		\pause
+		\item Viele unterschiedliche Implementierungen und Standards 
+		\begin{itemize}
+			\item Microsoft .NET Entity Framework 
+			\begin{itemize}
+				\item Alle .NET-Programmiersprachen (C\#, Visual Basic, Visual C++)
+				\item Gute Unterstützung verschiedener Datenbanken
+				\item Unterstützt Code-First und Model-First Ansätze
+			\end{itemize}
+			\item Java Persistence API (JPA)
+			\begin{itemize}
+				\item Standardisierte O/R-Mapper-Spezifikation für Java
+			\end{itemize}
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{Objekt-relationales Mapping}
+	\framesubtitle{Java Persistence API (JPA)}
+	\onslide
+	\structure{Die JPA wurde erstmals 2006 veröffentlicht}
+	\abs
+	\begin{itemize}
+		\item Standardisierte Programmierschnittstelle (API)
+		\begin{itemize}
+			\item Methoden zum Speichern, Modifizieren und Laden von Objekten aus relationalen Datenbanken
+			\item Unterstützung von Polymorphie / Vererbung 
+			\item Verwendet Java Annotations (z.B. \texttt{@Entity, @OneToMany})
+		\end{itemize}
+	\pause
+		\item Java Persistence Query Language 
+		\begin{itemize}
+			\item Eigene, an SQL angelehnte Sprache
+		\end{itemize}
+		\item XML-Datei zur Konfiguration des relationalen Mappings
+		\begin{itemize}
+			\item Mittels \texttt{persistence.xml}-Datei kann das Mapping definiert werden
+		\end{itemize}
+	\pause
+		\item Viele Implementierungen der JPA, z.B. \textit{Eclipselink} oder \textit{Hibernate}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[t]\frametitle{Objekt-relationales Mapping}
+	\framesubtitle{EclipseLink}
+	\structure{JPA-Referenzimplementierung \textit{EclipseLink}}
+	\abs
+	\begin{itemize}
+		\item Kann unter \url{https://www.eclipse.org/eclipselink/} heruntergeladen werden
+		\item Umfasst mehr als nur eine JPA-Implementierung
+		\item Konfiguration über \texttt{persistence.xml}
+		\item Verwendung von Annotationen im Code
+		\item Muss im \texttt{CLASSPATH} vorhanden sein
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{Objekt-relationales Mapping}
+    \framesubtitle{Beispiel -- Tabellen f\"ur Genre und Film}
+    \structure{persistence.xml}
+\lstset{language=xml}
+\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}[xleftmargin=3ex, language=xml]
+<?xml version="1.0" encoding="UTF-8" ?>
+<persistence xmlns:xsi=...> 
+ <persistence-unit name="filme" transaction-type="RESOURCE_LOCAL">   
+  <class>de.test.Film</class>   
+  <class>de.test.Genre</class>   
+  <properties>     
+   <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>     
+   <property name="javax.persistence.jdbc.url" 
+             value="jdbc:postgresql://<host><:port></database>"/>
+   <property name="javax.persistence.jdbc.user" value="<user>"/>
+   <property name="javax.persistence.jdbc.password" value="<password>"/>
+   <property name="eclipselink.ddl-generation" value="create-tables"/>
+   <property name="eclipselink.ddl-generation.output-mode" value="database"/>
+  </properties>
+ </persistence-unit>
+</persistence> 
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{Objekt-relationales Mapping}
+    \framesubtitle{Beispiel -- Tabellen f\"ur Genre und Film}
+    \structure{Java-Code \texttt{\small Film(FilmNr int,Name varchar(50),ErschJahr int,GenreID int)}}
+\lstset{language=Java}
+\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}[xleftmargin=3ex, basicstyle=\ttfamily\tiny, language=Java]
+package de.test;
+import javax.persistence.*;
+
+@Entity
+public class Film{
+ @Id
+ @GeneratedValue(strategy=GenerationType.IDENTITY)
+ @Column(name="FilmNr")
+ private long filmid ; 
+
+ @Column(name="Name")
+ private String name ; 
+
+ @Column(name="ErschJahr")
+ private int jahr;
+
+ @Column(name="GenreID")
+ private int genreid;
+
+ @OneToOne(cascade=CascadeType.PERSIST)
+ @JoinColumn(name="GenreID")
+ private Genre genre ; 
+
+ //Getter und Setter fuer private Attribute
+ ...
+}
+\end{lstlisting}
+\end{frame}
+
+% genauer im code:
+% import javax.persistence.CascadeType;
+% import javax.persistence.Entity;
+% import javax.persistence.GeneratedValue;
+% import javax.persistence.GenerationType;
+% import javax.persistence.Id;
+% import javax.persistence.OneToOne;
+
+%\section*{Zusammenfassung}
+%
+%\begin{frame}{Zusammenfassung}
+%	\begin{itemize}
+%		\item Grundlagen über Systemarchitekturen
+%		\begin{itemize}
+%					\item 2-Tier
+%					\item 3-Tier
+%		\end{itemize}		
+%		\item JDBC
+%		\begin{itemize}
+%			\item Einführung
+%			\item API-Struktur
+%			\item Connection Pooling
+%		\end{itemize}
+%		\item Object-relationaler Impedance Mismatch und O/R - Mapper
+%	\end{itemize}
+%
+%\end{frame}
+%

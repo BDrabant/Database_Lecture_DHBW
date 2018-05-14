@@ -1,0 +1,183 @@
+%
+% basierend auf der Vorlesung von Prof. Dr. Julian Reichwald
+%
+\documentclass[xcolor,aspectratio=169,hyperref={bookmarks=false}]{beamer}
+
+%------------------ Load useful packages ------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+\usepackage{graphicx}
+\usepackage[ngerman]{babel}
+\usepackage{listings}
+\usepackage{amsfonts}
+\usepackage{lmodern}
+\usepackage{tikz}
+\usepackage{tikz-er2}
+\usepackage{tikz-uml}
+\usepackage{colortbl}
+\usepackage{ifsym}
+\usepackage{booktabs}
+% \usepackage[style=alphabetic, backend=biber]{biblatex}
+\usepackage[backend=biber]{biblatex}
+\usepackage{ulem}
+\usepackage{qtree}
+\usepackage{pgf-pie}
+%\usepackage{enumitem} % fehleranfälliges Paket!
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{romannum}
+
+\input{beamersetup}
+\addbibresource{bibliography.bib}
+
+%\usepackage{pgfpages}
+%\pgfpagesuselayout{2 on 1}[a4paper,border shrink=5mm]
+
+%-------------- Configure tikz ----------
+\usetikzlibrary{shapes,shadows, arrows,decorations, positioning, fit, chains, shapes.multipart, calc}
+
+%-------------- Configure listings evironments to SQL ----------
+\renewcommand{\ttdefault}{pcr}
+\lstset{numbers=left,
+		numberstyle=\tiny,
+		keywordstyle=\bfseries\ttfamily,
+		basicstyle=\ttfamily\scriptsize}
+\lstset{language=sql}
+\lstset{emph={
+    with
+    },emphstyle={\bfseries\ttfamily}
+}
+
+%-------------- Configure description environment ----------
+% with package enumitem
+%\setlist[description]{leftmargin=1cm,labelindent=1cm}
+
+%------------- Define some useful commands ----------------------
+% Syntax: \BG{<background colour: blue, yellow, green, ...>}{<text>}
+\newcommand\backgroundcolour[2]{{\setlength\fboxsep{0pt}\colorbox{#1}{#2\strut}}}
+
+\newcommand{\thankyouframe}{\frame{\begin{center} \huge Vielen Dank für\\ Ihre Aufmerksamkeit!\end{center}}}
+\newcommand{\authorname}{<Name Dozent>}
+
+\newcommand{\abs}{\par\vskip 0.2cm\goodbreak\noindent}
+\newcommand{\nl}{\par\noindent}
+\newcommand{\mcl}[1]{\mathcal{#1}}
+\newcommand{\nowrite}[1]{}
+
+\newcommand{\ojoin}{\setbox0=\hbox{$\bowtie$}\rule[-.02ex]{.25em}{.4pt}\llap{\rule[\ht0]{.25em}{.4pt}}}
+\newcommand{\leftouterjoin}{\mathbin{\ojoin\mkern-5.8mu\bowtie}}
+\newcommand{\rightouterjoin}{\mathbin{\bowtie\mkern-5.8mu\ojoin}}
+\newcommand{\fullouterjoin}{\mathbin{\ojoin\mkern-5.8mu\bowtie\mkern-5.8mu\ojoin}}
+
+%-------------- Configure the title page ---------------------
+\title[Datenbanken]{\textbf{Datenbanken}}
+\author[\authorname]{\authorname\\ \footnotesize\texttt{<E-Mail-Adresse Dozent>}}
+\institute[DHBW Mannheim]{}
+\titlegraphic{\includegraphics[scale=0.3]{img/dhbwlogo.png}\\}
+\date{\ }
+
+%---------------- Definition of Image Files -------------------
+\pgfdeclareimage[width=120pt]{lochkarte}{img/lochkarte.png}
+\pgfdeclareimage[width=80pt]{magnetband}{img/magnetband.png}
+\pgfdeclareimage[width=120pt]{concurrentAccess}{img/konkurrierenderZugriff.png}
+\pgfdeclareimage[width=80pt]{codd}{img/codd.png}
+\pgfdeclareimage[width=180pt]{jdbctypes}{img/jdbctypes.png}
+
+%---------------- Finally, start the slides ---------------
+\begin{document}
+
+%------------------- Color Definitions -----------------------
+\definecolor{Red}{rgb}{1,0,0}
+\definecolor{Green}{rgb}{0,1,0}
+\definecolor{Yellow}{rgb}{1,1,0}
+
+\maketitle
+\onslide
+
+\section*{Organisatorisches}
+
+\begin{frame}{Administratives}
+\begin{description}[leftmargin=0cm]
+	\item[\textbf{Modul:}] Datenbanken
+	\item[\textbf{Lehreinheiten:}] Datenbankentwurf und Implementierung (3. Semester)\\ Datenbanktechnik (4. Semester)
+	\item[\textbf{Aufwand:}] 44 h Vorlesung \\ 22 h Vorlesung
+	\item[\textbf{Unterlagen:}] Google Drive, Dropbox, Moodle o.~\"a.
+	\item[\textbf{\"Ubungen:}] \"Ubungen in Vorlesung und \"Ubungsbl\"atter 
+	\item[\textbf{Klausur:}] Im Rahmen des Moduls
+\end{description}
+\end{frame}
+
+\begin{frame}{Hinweise}
+\begin{itemize}
+\item Folien ersetzen \textbf{nicht} Mitschrift oder eigenst\"andige Literaturrecherche
+\item Fragen, Diskussionsbeiträge, Vorträge stets erwünscht
+\item Bedürfnis für außerplanm\"a\ss ige Pausen mitteilen
+\item Anwesenheitsverantwortung
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Lernziele}
+	\structure{Nach erfolgreicher Teilnahme an diesem Modul können Sie}
+	\begin{itemize}
+		\item die grundlegenden Eigenschaften relationaler Datenbankmanagementsysteme erläutern
+		\item einen Anwendungsfall in ein konzeptionelles und implementierendes Datenmodell überführen 
+		\item Datenbanken erstellen und mittels SQL Anfragen an das RDBMS senden
+		\item die Speicherstrukturen des RDBMS beurteilen und einschätzen
+		\item Ausführungspläne lesen und Anfragen optimieren 
+		\item mit Transaktionsisolationsstufen arbeiten 
+	\end{itemize}
+\end{frame}
+
+\subsection*{Literatur}
+
+\begin{frame}{Literatur}
+\nocite{*}
+\printbibliography
+\end{frame}
+
+\subsection*{Verwendete Softwarepakete}
+\begin{frame}[t]\frametitle{Verwendete Software-Pakete}
+\structure{Die folgenden Software-Pakete finden während der Vorlesung Verwendung:}
+	\begin{itemize}
+		\item PostgreSQL Server,  \url{https://www.postgresql.org}
+		\item pgAdmin4 Administrationswerkzeug \url{https://www.pgadmin.org}
+	\end{itemize}
+\vspace{3em}
+\alert{Installieren Sie bitte jeweils die aktuellste Version und stellen Sie sicher, dass Ihre Installation 
+	funktionstüchtig ist! \textbf{Vergessen Sie nicht die Benutzername/Passwort-Kombination, die Sie bei der Installation angelegt haben!}}
+\end{frame}
+
+%
+% KAPITEL der VORLESUNG
+%
+
+% ENTWURF UND PROGRAMMIERUNG
+\input{grundlagen}
+\input{dbdesignmod}
+\input{logischerEntwurf}
+\input{sql}
+
+\input{anwendungsfall}
+
+% ANWENDUNGSPROGRAMMIERUNG
+% Basic
+\input{programmierungBasic}
+\input{anwendungsfallProgrammierung}
+
+% Advanced
+\input{programmierungAdvanced}
+
+% ENTWURFSTHEORIE
+% Relationale Entwurfstheorie - Kemper et al, Kapitel 6
+\input{normalisierung}
+
+% DATENBANKTECHNIK
+\input{physischespeicherung}
+\input{indexing}
+\input{basisalgorithmen}
+\input{transaktionen}
+
+%\thankyouframe
+\end{document}

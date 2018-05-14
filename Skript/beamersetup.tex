@@ -1,0 +1,116 @@
+%----------------Slide Setup--------------------------------
+\usetheme{CambridgeUS}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{theorems}[ams style]
+\setbeamertemplate{itemize items}[triangle]
+\setbeamertemplate{enumerate items}[default]
+\setbeamertemplate{bibliography item}[text]
+
+\setbeamertemplate{section in toc}{%
+	{\color{black}\inserttocsectionnumber.}~\inserttocsection}
+
+\setbeamercolor{subsection in toc}{bg=white,fg=structure}
+
+\setbeamertemplate{subsection in toc}{%
+	\hspace{1.2em}{\color{structure}\rule[0.3ex]{3pt}{3pt}}~\inserttocsubsection\par}
+
+\setbeamertemplate{subsubsection in toc}{%
+	\hspace{2.4em}{\color{structure}\rule[0.3ex]{3pt}{3pt}}~\inserttocsubsubsection\par}
+
+\beamertemplatenavigationsymbolsempty
+
+\AtBeginPart{ %Place a Part Page at the beginning of every part
+	\frame{\partpage}
+	%\begin{frame}{Inhalt \partname \ \Roman{part}}
+	%	\tableofcontents
+	%\end{frame}
+}
+
+\AtBeginSection[] %Place an agenda of the current section at the beginning
+{
+	\begin{frame}
+	\frametitle{Agenda}
+	\tableofcontents[sectionstyle=show/shaded,subsectionstyle=show/show/shaded, subsubsectionstyle=show/show/show/shaded]
+	\end{frame}
+}
+
+\setbeamertemplate{headline}{}
+
+%
+% added by B. D. 
+%
+\setbeamertemplate{footline}{
+	\leavevmode
+	\hbox{
+		\begin{beamercolorbox}[wd=.23\paperwidth,ht=2.25ex,dp=1ex,left]{author in head/foot}%
+			\usebeamerfont{author in head/foot}\hspace*{1em}\insertshortauthor
+		\end{beamercolorbox}
+		\begin{beamercolorbox}[wd=.55\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+			\usebeamerfont{title in head/foot}{
+			  % \insertshorttitle\hspace*{2em}\insertsection\hspace*{2em}\insertsubsection
+				%\Roman{part} \insertshortpart\hspace*{2em}\arabic{section} \insertsection				
+				\Roman{part} \insertshortpart\hspace*{2em}\insertsection				
+			}
+		\end{beamercolorbox}
+		\begin{beamercolorbox}[wd=.22\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+			\usebeamerfont{date in head/foot}
+			 \insertframenumber{} / \inserttotalframenumber\hspace*{5ex} 
+	\end{beamercolorbox}}
+	\vskip0pt
+}
+%%%%%%%%%%%%%%%%%
+
+\makeatletter
+\setbeamertemplate{title page}
+{
+  \vbox{}
+ % \vfill
+  \begin{centering}
+    \begin{beamercolorbox}[sep=8pt,center]{title}
+      {\usebeamercolor[fg]{titlegraphic}\inserttitlegraphic\par}
+      \vskip0.2em%
+  
+      \usebeamerfont{title}\inserttitle\par%
+            \ifx\insertsubtitle\@empty%
+      \else%
+        \vskip0.2em%
+        {\usebeamerfont{subtitle}\usebeamercolor[fg]{subtitle}\insertsubtitle\par}%
+      \fi%     
+    \end{beamercolorbox}%
+    \vskip1em\par
+    \begin{beamercolorbox}[sep=8pt,center]{author}
+      \usebeamerfont{author}\insertauthor
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[sep=8pt,center]{institute}
+      \usebeamerfont{institute}\insertinstitute
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[sep=8pt,center]{date}
+      \usebeamerfont{date}\insertdate
+    \end{beamercolorbox}\vskip0.2em
+  \end{centering}
+  \vfill
+}
+
+\definecolor{dhbwred}{RGB}{227,6,19}
+\definecolor{dhbwblack}{RGB}{0,0,0}
+\definecolor{dhbwblue}{RGB}{50,65,96}
+\definecolor{dhbwlightgrey}{RGB}{126,137,143}
+
+\definecolor{lightgrey}{RGB}{197, 197, 197}
+\definecolor{mediumgrey}{RGB}{183, 183, 183}
+\definecolor{bluegreen}{RGB}{3, 166, 155}
+\definecolor{lightbeige}{RGB}{255, 251, 241}
+
+\setbeamercolor{structure}{fg=dhbwblack}
+\setbeamercolor{palette primary}{fg=dhbwlightgrey, bg=white}
+\setbeamercolor{palette secondary}{fg=dhbwlightgrey, bg=white}
+\setbeamercolor{palette tertiary}{fg=dhbwlightgrey, bg=white}
+\setbeamercolor{title}{fg=dhbwblack}
+\setbeamercolor{frametitle}{fg=dhbwblack, bg=lightgrey}
+\setbeamercolor{alerted text}{fg=dhbwred}
+\setbeamercolor{block title alerted}{bg=dhbwblack!30, fg=black}
+\setbeamercolor{block body alerted}{bg=white, fg=black}
+%\setbeamercolor{background canvas}{bg=pitchblack}
+%\setbeamercolor{normal text}{fg=lightbeige}
+
+\makeatother

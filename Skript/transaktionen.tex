@@ -1,0 +1,886 @@
+%!TEX root = Slides.tex
+\part{Transaktionen}
+
+\section{Grundlagen und Begriffsdefinitionen}
+
+\subsection{Datenbankobjekte}
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{\textit{Datenbankobjekte}}	
+	\begin{itemize}
+		\item Datenbankobjekte haben Bezeichner und k\"onnen Attribute, Datens\"atze, Bl\"ocke, Relationen usw. sein
+		\item Die Granularität spielt in der Betrachtung von Transaktionen keine Rolle
+	\end{itemize}
+	\structure{Operationen auf Datenbankobjekten}
+	\begin{itemize}
+		\item \texttt{read\_item(X)} liest ein Objekt der Datenbank mit dem Namen \texttt{X} in eine Programmvariable \texttt{X}
+		\item \texttt{write\_item(X)} schreibt den Wert der Programmvariablen \texttt{X} in das Objekt \texttt{X} der Datenbank
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{Vorgehen bei \texttt{read\_item(X)}:}	
+	\begin{enumerate}
+		\item Suche die Adresse des Festplattenblocks, der das Objekt \texttt{X} enthält
+		\item Kopiere diesen Plattenblock in den Puffer im Arbeitsspeicher (sofern nicht bereits dort enthalten)
+		\item Kopiere Objekt \texttt{X} vom Puffer in die Programmvariable namens \texttt{X}
+	\end{enumerate}
+\end{frame}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Vorgehen bei \texttt{write\_item(X)}:}	
+\begin{enumerate}
+	\item Suche die Adresse des Festplattenblocks, der das Objekt \texttt{X} enthält
+	\item Kopiere diesen Plattenblock in den Puffer im Arbeitsspeicher (sofern nicht bereits dort enthalten)
+	\item Kopiere Objekt \texttt{X} von der Programmvariable \texttt{X} an die richtige Stelle im Puffer
+	\item Schreibe den aktualisierten Block aus dem Puffer (sofort oder später) auf Platte zurück 
+\end{enumerate}
+\end{frame}
+
+\subsection{Transaktionen}
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Transaktion}}
+\begin{itemize}
+	\item beschreibt logische Verarbeitungseinheit, die aus Sequenz von Einzeloperationen besteht
+	\item wird entweder vollständig oder gar nicht ausgeführt 
+	\item \"uberf\"uhrt Datenbank von konsistentem Zustand in neuen, konsistenten Zustand 
+	\begin{itemize}
+		\item konsistenter Zustand erf\"ullt die Integritätsbedingungen des Schemas
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{Geforderte Eigenschaften von Transaktionen: ACID}
+	\begin{itemize}
+		\item \textbf{A}tomicity: Unteilbarkeit der Operationen
+		\item \textbf{C}onsistency: Jede Transaktion hinterlässt die Datenbank in konsistentem Zustand
+		\item \textbf{I}solation: Transaktionen werden ohne gegenseitige Beeinflussung ausgeführt
+		\item \textbf{D}urability: Änderungen abgeschlossener Transaktionen werden dauerhaft in der DB persistiert
+	\end{itemize}
+	\vspace{1em}	
+ACID ist für unternehmenskritische OLTP-Anwendungen essentiell und muss vom DBMS sichergestellt werden.	
+\end{frame}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Transaktion als Einheit mehrerer DB-Operationen}
+\begin{itemize}
+	\item Transaktionen fassen DB-Operationen zu einer Einheit zusammen.
+	\item In SQL werden Transaktionen explizit oder implizit mit den Befehlen
+	\begin{itemize}
+		\item \texttt{BEGIN TRANSACTION} gestartet (Start)
+		\item \texttt{COMMIT} abgeschlossen (Ende)
+		\item \texttt{ROLLBACK} r\"uckg\"angig gemacht (Ende)
+	\end{itemize}
+	\pause
+	\item Alle Operationen zwischen Start und Ende werden als eine Einheit aufgefasst. 
+	\item Sie werden dann entweder ganz (\texttt{COMMIT}) oder gar nicht (\texttt{ROLLBACK}) ausgeführt.
+	\pause
+	\item Transaktionen werden auch implizit durch die DB gestartet und beendet.
+	\begin{itemize}
+		\item DB entscheidet dann, ob Transaktion durchgef\"uhrt oder r\"uckg\"angig gemacht wird.
+	\end{itemize}
+\end{itemize}
+\abs\pause
+\textbf{Folge:} Bei Scheitern einer Transaktion muss urspr\"unglicher Datenbankzustand wiederhergestellt werden
+$\Rightarrow$ Recovery-Konzepte nötig (siehe PDF-Seite \pageref{sec:recovery}).
+\end{frame}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Bei Scheitern einer Transaktion: Wiederherstellung des vorigen \textit{Datenbankzustands}}
+\abs
+\pause
+Gründe für Fehlschlagen einer Transaktion:
+\begin{itemize}
+\item Rechnerfehler oder Systemabstürze -- z.~B.~Ausfall des Arbeitsspeichers, Netzwerkfehler\\[4pt]
+\item Transaktionsfehler -- z.~B.~durch eine Division durch Null oder Integer-Überlauf\\[4pt]
+\item Lokale Fehler -- z.~B.~können notwendige Daten für die Durchführung einer Transaktion nicht gefunden werden\\[4pt]
+\item Abbruch einer Transaktion durch Nebenläufigkeitskontrolle (dazu später mehr)\\[4pt]
+\item Plattenfehler -- z.~B.~durch einen Crash des Schreib/Lesekopfes der Platte \\[4pt]
+\item Externe Probleme -- z.~B.~Ausfall der Stromversorgung, Diebstahl, Katastrophen \\[4pt]
+\end{itemize}
+\end{frame}
+
+\subsection{Parallelität}
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Nahezu alle DBMS arbeiten im Mehrbenutzerbetrieb}
+\begin{itemize}
+	\item Das kann zu Konflikten führen!
+	\item Lesender Zugriff von Benutzer $A$, während Benutzer $B$ einen Datensatz neu schreibt 
+	\item Gleichzeitiger schreibender Zugriff der Benutzer $A$ und $B$
+\end{itemize}
+\pause\abs
+\structure{Paralleler Zugriff auf Daten wird durch moderne CPU-Architekturen ermöglicht.}
+\end{frame}
+
+\subsection{Problemstellung bei paralleler Ausführung von Transaktionen}
+
+\subsection{Parallelität}
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+Mehrere Prozesse greifen zeitgleich auf die Datenbank zu: 
+	\begin{itemize}
+		\item Interleaved Execution (siehe Abbildung zwischen $t_1$ und $t_2$)
+		\item Parallel Execution (siehe Abbildung zwischen $t_3$ und $t_4$)
+	\end{itemize}
+\begin{figure}
+	\includegraphics[width=250pt]{img/parallel-processes.png}
+	\caption{Interleaved vs. parallel execution (nach \cite[S. 745]{EN10})}
+\end{figure}
+\end{frame}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Seien $T_1$ und $ T_2$ zwei Transaktionen, die unabhängig voneinander ausgeführt werden k\"onnen}		
+\begin{center}
+	\begin{tabular}{|p{3.5cm}|}
+		\multicolumn{1}{c}{$T_1$} \\\hline
+		\texttt{read\_item(X)} \\
+		\texttt{X:=X-N} \\
+		\texttt{write\_item(X)}\\
+		\texttt{read\_item(Y)}  \\
+		\texttt{Y:=Y+N} \\
+		\texttt{write\_item(Y)}\\\hline
+	\end{tabular}
+	\hspace{0.5cm}
+	\begin{tabular}{|p{3.5cm}|}
+		\multicolumn{1}{c}{$T_2$} \\\hline
+		\texttt{read\_item(X)}\\
+		\texttt{X:=X+M}\\
+		\texttt{write\_item(X)}\\
+		\\
+		\\
+		\\\hline
+	\end{tabular}
+\end{center}
+\begin{itemize}
+	\item $X$ repr\"asentiert die freien Pl\"atze eines Fluges 
+	\item $Y$ stellt die Platzbelegungen dar
+	\item $T_1$ vermindert die Anzahl freier Pl\"atze nach Reservierung
+	\item $T_2$ erh\"oht die Anzahl freier Pl\"atze nach Stornierung
+\end{itemize}
+\pause
+\textbf{Welches Problem kann hier unmittelbar erkannt werden?}
+\end{frame}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Das Lost-Update-Problem. Parameter: $N=5, M=4$}
+\begin{center}
+\begin{tabular}{c|p{3.5cm}|c|p{3.5cm}|c}
+	$X_{T_1}$ & \multicolumn{1}{c|}{$T_1$} & $X$ & \multicolumn{1}{c|}{$T_2$} & $X_{T_2}$ \\\hline
+	80 & \texttt{read\_item(X)} & 80 & &\\
+	75 & \texttt{X:=X-N} & & & \\
+	& & & \texttt{read\_item(X)} & 80 \\
+	& & & \texttt{X:=X+M} & 84\\
+	& \texttt{write\_item(X)} & 75 & & \\
+	& \texttt{read\_item(Y)} &  & & \\
+	& & \cellcolor{Red}84 & \texttt{write\_item(X)} & \\
+	& \texttt{Y:=Y+N} &  & & \\
+	& \texttt{write\_item(Y)} &&&\\
+\end{tabular}
+\end{center}
+\textbf{Wie viele Personen sitzen wirklich im Flugzeug?}
+\end{frame}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\begin{columns}
+	\begin{column}{.48\textwidth}
+	\begin{tabular}{p{3.0cm}|p{3.0cm}}
+			\multicolumn{1}{c|}{$T_1$} & \multicolumn{1}{c}{$T_2$}\\\hline
+			\texttt{read\_item(X)} & \\
+			\texttt{X:=X-N} & \\ 
+			\texttt{write\_item(X)} & \\
+			& \texttt{read\_item(X)} \\
+			& \texttt{X:=X+M}\\
+			& \texttt{write\_item(X)}\\
+			\texttt{read\_item(Y)} & \\
+			\texttt{Y:=Y+N}& \\
+			\cellcolor{Yellow}\texttt{write\_item(Y)} & \\\hline
+			\end{tabular}
+		\end{column}
+		\begin{column}{.48\textwidth}
+		\structure{Dirty Read Problem}
+		\begin{itemize}
+			\item $T_1$ liest einen Wert und schreibt ein Update 
+			\item $T_2$ liest den \textit{neuen} Wert und schreibt ebenfalls ein Update 
+			\item $T_1$ schlägt fehl (z.B. weil Y nicht geschrieben werden kann). Damit wird $T_1$ abgebrochen und der ursprüngliche Wert von $X$ muss wiederhergestellt werden. \alert{Aber welcher?}
+		\end{itemize}
+		\end{column}
+	\end{columns}
+	\end{frame}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\begin{columns}
+	\begin{column}{.48\textwidth}
+	\begin{tabular}{p{3.0cm}|p{3.0cm}}
+			\multicolumn{1}{c|}{$T_1$} & \multicolumn{1}{c}{$T_3$}\\\hline
+			& \texttt{sum:=0}\\
+			& \texttt{read\_item(A)}\\
+			\texttt{read\_item(X)} & \texttt{sum:=sum+A}\\
+			\texttt{X:=X-N} & \multicolumn{1}{c}{$\vdots$}  \\
+			\texttt{write\_item(X)} & \\ 
+			& \texttt{read\_item(X)} \\
+			& \texttt{sum:=sum+X}\\
+			& \texttt{read\_item(Y)}\\
+			& \texttt{sum:=sum+Y} \\
+			\texttt{read\_item(Y)}& \\
+			\texttt{Y:=Y+N} & \\
+			\texttt{write\_item(Y)} & \\\hline
+			\end{tabular}
+		\end{column}
+		\begin{column}{.48\textwidth}
+		\structure{Non-Repeatable Read/falsche Summenbildung}
+		\begin{itemize}
+			\item $T_3$ liest $X$, nachdem $N$ abgezogen wurde 
+			\item $T_3$ liest $Y$, bevor $N$ addiert wurde 
+		\end{itemize}
+		\alert{Das Ergebnis weicht um $N$ vom korrekten Wert ab.}
+		\end{column}
+	\end{columns}
+	\end{frame}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\begin{columns}
+		\begin{column}{.48\textwidth}
+			\begin{tabular}{p{3.0cm}|p{3.0cm}}
+				\multicolumn{1}{c|}{$T_1$} & \multicolumn{1}{c}{$T_3$}\\\hline
+				SELECT count(*) INTO X FROM Y; & \\
+				& INSERT INTO Y VALUES (...);\\
+				& commit;\\
+				UPDATE Y SET Y.a = Y.a + (1/X) &   \\\hline
+			\end{tabular}
+		\end{column}
+		\begin{column}{.48\textwidth}
+			\structure{Phantom Read}
+			\begin{itemize}
+				\item $T_3$ fügt einen Phantomdatensatz ein, der von $T_1$ nicht berücksichtigt wird. 
+			\end{itemize}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+Moderne Datenbanken haben Konzepte und Mechanismen, wodurch
+\begin{itemize}
+	\item die genannten Probleme gel\"ost werden k\"onnen.
+	\item gescheiterte Transaktionsketten erfolgreich konsistent r\"uckg\"angig gemacht werden k\"onnen.
+\end{itemize}
+\abs
+$\Rightarrow$ Recovery und Nebenläufigkeitskontrolle.
+\end{frame}
+
+\section{Recovery und Nebenläufigkeitskontrolle}\label{sec:recovery}
+\subsection{Recovery Manager}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Recovery Manager überwacht die Zust\"ande der Transaktionen}
+\abs
+Folgende Informationen sind dem Recovery Manager bekannt:
+\begin{itemize}
+	\item Start einer Transaktion (\texttt{BEGIN TRANSACTION})
+	\item Welche \texttt{READ}- und \texttt{WRITE}-Operationen von einer Transaktion durchgeführt werden
+	\item Wann die Kette von \texttt{READS} und \texttt{WRITES} beendet ist (\texttt{END\_TRANSACTION})
+\end{itemize}
+\pause
+\abs
+Aufgabe des Recovery Manager 
+\begin{itemize}
+	\item Nach erfolgreicher Prüfung wird dies durch \texttt{COMMIT} angezeigt. 
+	Änderungen werden auf Platte geschrieben -- ggf.~nochmaliges Pr\"ufen (OS-Prozess) vor \texttt{COMMIT}
+	\item Fehlerhaftes Ende einer Transaktion wird durch \texttt{ROLLBACK} (oder \texttt{ABORT}) angezeigt.
+	Änderungen werden nicht auf Platte geschrieben und müssen rückgängig gemacht werden.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+\begin{figure}
+\begin{tikzpicture}
+\ttfamily
+\node[] (init){}; 
+\node[draw, rectangle, rounded corners=1mm, minimum size=1.5cm] (start) [right= 2cm of init] {\tiny Active}; 
+\draw[->] (init) -- (start) node[midway, above, align=center] {\tiny BEGIN TRANS.}; 
+\path[draw] (start) edge[loop above] () node[above=9mm of start] {\tiny READ/WRITE}; 
+\node[draw, rectangle, rounded corners=1mm,  minimum size=1.5cm, align=center] (pc) [right=2cm of start] {\tiny Partially\\ \tiny Committed};
+\draw[->] (start) -- (pc) node[midway, above] {\tiny END TRANS.}; 
+\node[draw, rectangle, rounded corners=1mm,  minimum size=1.5cm] (c) [right=2cm of pc] {\tiny Committed};
+\node[draw, rectangle, rounded corners=1mm,  minimum size=1.5cm] (f) [below=of pc] {\tiny Failed};
+\draw[->] (pc) -- (c) node[midway, above] {\tiny COMMIT}; 
+\draw[->] (pc) -- (f) node[midway, right] {\tiny ABORT};
+\draw[->] (start) |- (f) node[midway, left] {\tiny ABORT}; 
+\node[draw, rectangle, rounded corners=1mm,  minimum size=1.5cm] (t) [below=of c] {\tiny Terminated};
+\draw[->] (c) -- (t); 
+\draw[->] (f.east) -- (t.west); 
+\end{tikzpicture}
+\caption{Zustandsübergangsdiagramm einer Transaktion}
+\end{figure}
+\end{frame}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+\structure{Um Transaktionen rückgängig machen zu können, müssen die Operationen einer Transaktion 
+	protokolliert werden: Database Log}
+\begin{itemize}
+\item Database-Log ist sequentielle Append-Only-Datei
+\pause
+\item Alle Operationen einer Transaktion $T$ und einem Objekt $X$ werden im Log gespeichert: 
+\begin{itemize}
+\item Start einer Transaktion: \texttt{[start\_transaction, T]}
+\item Write-Operationen: \texttt{[write\_item, T, X, alt, neu]}
+\item Read-Operationen: \texttt{[read\_item, T, X]} 
+\item Abbruch einer Transaktion: \texttt{[abort, T]}
+\item Commit einer Transaktion: \texttt{[commit, T]} (wird als \textit{Commit Point} bezeichnet)
+\end{itemize}
+\pause
+\item Bei Auftreten eines Fehlers kann m.~H.~des Logs die Transaktion rückgängig gemacht werden
+\pause
+\item Transaktion hinter ihrem Commit Point ist permanent in der Datenbank gespeichert
+\end{itemize} 
+\end{frame}
+
+\subsection{Ausführungspläne}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\begin{definition}[Ausführungsplan (Schedule)]
+Ein Ausführungsplan $S(T_1,T_2,\dots ,T_n)$ von Transaktionen $T_1,T_2,\dots ,T_n$ ist eine Sequenz der 
+Operationen aller Transaktionen $T_i$ mit der Eigenschaft, dass die Operationen in $S$ in der gleichen 
+Reihenfolge erscheinen müssen wie in $T_i$. 
+\end{definition}
+\begin{itemize}
+\item Die Operationen der in $S$ beteiligten Transaktionen können sich vermischen, solange die o.g. Reihenfolge eingehalten wird.
+\item Operationen \texttt{read}, \texttt{write}, \texttt{abort}, \texttt{commit} werden mit \texttt{r}, \texttt{w}, 
+\texttt{c}, \texttt{a} abgekürzt
+\end{itemize}
+\abs
+\textbf{Vom Ausführungsplan hängt sowohl die Nebenläufigkeit als auch das Recovery ab.}
+\end{frame}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\begin{figure}
+		\includegraphics[scale=0.5]{img/scheduler.pdf}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+\begin{center}
+\begin{tabular}{c|p{3.5cm}|c|p{3.5cm}|c}
+	$X_{T_1}$ & \multicolumn{1}{c|}{$T_1$} & $X$ & \multicolumn{1}{c|}{$T_2$} & $X_{T_2}$ \\\hline
+	80 & \texttt{read\_item(X)} & 80 & &\\
+	75 & \texttt{X:=X-N} & & & \\
+	& & & \texttt{read\_item(X)} & 80 \\
+	& & & \texttt{X:=X+M} & 84\\
+	& \texttt{write\_item(X)} & 75 & & \\
+	& \texttt{read\_item(Y)} & & & \\
+	& & \cellcolor{Red}84 & \texttt{write\_item(X)} & \\
+	& \texttt{Y:=Y+N} &  & & \\
+	& \texttt{write\_item(Y)} &&&\\
+	\end{tabular}
+\end{center}
+Ausführungsplan: 
+$$S: r_1(X) - r_2(X) - w_1(X) - r_1(Y) - w_2(X) - w_1(Y)$$
+\end{frame}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\begin{definition}[Konflikt im Ausf\"uhrungsplan]
+	\structure{Zwei Operationen eines Ausführungsplanes stehen in Konflikt, wenn folgende Bedingungen erf\"ullt sind:}
+	\begin{enumerate}
+		\item Die Operationen gehören zu unterschiedlichen Transaktionen.
+		\item Die Operationen greifen auf das gleiche Objekt zu.
+		\item Mindestens eine der Operationen ist \texttt{write}.
+	\end{enumerate}
+\end{definition}
+\pause
+\abs
+Beispiel: 
+$$\text{Ausführungsplan }S: r_1(X) - r_2(X) - w_1(X) - r_1(Y) - w_2(X) - w_1(Y)$$
+\textbf{Konflikte: $(r_1(X), w_2(X))$ und $(w_1(X), w_2(X))$}.
+\end{frame}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\textbf{Beachte:} Der folgende Ausf\"uhrungsplan hat in Konflikt stehende Operationen.}
+{\small
+	\begin{center}
+		\begin{tabular}{p{3.0cm}|p{3.0cm}}
+			\multicolumn{1}{c|}{$T_1$} & \multicolumn{1}{c}{$T_2$}\\\hline
+			\texttt{read\_item(X)} & \\
+			\texttt{X:=X-N} & \\ 
+			\texttt{write\_item(X)} & \\
+			\texttt{read\_item(Y)} & \\
+			\texttt{Y:=Y+N} &\\
+			\texttt{write\_item(Y)} & \\
+			&  \texttt{read\_item(X)}\\
+			&  \texttt{X:=X+M}\\
+			&\texttt{write\_item(X)} \\\hline
+		\end{tabular}
+	\end{center}
+}
+\pause
+\textbf{Aber:} 
+\begin{itemize}
+	\item Die Transaktionen werden in nicht \"uberschneidenden Zeitr\"aumen ausgef\"uhrt.
+	\item Wegen der ACID-Annahme: Datenbank daher am Ende in konsistentem Zustand.
+	\item Ein solcher Ausf\"uhrungsplan hei\ss t \textit{seriell}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\begin{definition}[Serieller Ausführungsplan]
+	Ein Ausführungsplan $S(T_1,T_2,\dots ,T_n)$ hei\ss t seriell, wenn f\"ur alle Transaktionen $T_i$ und $T_j$ mit $i\ne j$ 
+	eine der beiden Bedingungen gilt:
+	\begin{itemize}
+		\item Alle Operationen von $T_i$ sind in $S$ vor den Operationen von $T_j$ angeordnet.
+		\item Alle Operationen von $T_i$ sind in $S$ nach den Operationen von $T_j$ angeordnet.
+	\end{itemize}
+\end{definition}
+\nl
+\pause
+\textbf{Folge}:
+\\[4pt]
+In einem seriellen Ausführungsplan $S(T_1,T_2,\dots ,T_n)$ werden die Transaktionen $T_1,T_2,\dots ,T_n$ in einer bestimmten, 
+permutierten Reihenfolge hintereinander ausgef\"uhrt: 
+\begin{equation*}
+S= T_{\sigma(1)}-T_{\sigma(2)}-\ldots -T_{\sigma(n)}
+\end{equation*}
+\end{frame}
+
+\begin{frame}{\insertsection}
+\framesubtitle{Serieller Ausführungsplan}
+\begin{itemize}
+\item In seriellem Ausf\"uhrungsplan werden daher die Transaktionen in nicht \"uberschneidenden Zeitr\"aumen ausgef\"uhrt.
+\item Wegen ACID-Annahme: Datenbank nach Ausf\"uhrung von $S$ in konsistentem Zustand.	
+\end{itemize}
+\ \\[4pt]
+\pause
+\textbf{Aber:} Nebenl\"aufigkeit ist stark eingeschr\"ankt. Im allgemeinen nicht akzeptabel!
+\end{frame}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\textbf{Ziel:}	Finde Ausf\"uhrungspl\"ane, die 
+\begin{itemize}
+	\item zu gleichem Ergebnis wie ein serieller Ausf\"uhrungsplan f\"uhren
+	\item und dennoch ggf.~Nebenl\"aufigkeit erm\"oglichen
+\end{itemize}
+\pause
+\abs
+Wir werden zeigen: 
+\\[4pt]
+Serialisierbare Ausf\"uhrungspl\"ane f\"uhren zu gleichem Ergebnis wie ein serieller Ausf\"uhrungsplan.
+\pause
+\\[10pt]
+Serialisierbarkeit und Nebenl\"aufigkeitskontrolle
+\begin{itemize}
+	\item Serialisierbarkeit gew\"ahrleistet hohen Grad an Isolation der Operationen auf DB-Objekten.
+	\item Viele Konzepte der Nebenl\"aufigkeitskontrolle (siehe sp\"ater) f\"uhren zu Interferenzfreiheit und Isolation
+	von nebenl\"aufig ausgef\"uhrten Transaktionen. 
+	\item Die meisten dieser Konzepte stellen Serialisierbarkeit der Ausf\"uhrungspl\"ane sicher.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\begin{definition}[Serialisierbarer Ausführungsplan]
+Ein Ausführungsplan $S(T_1,T_2,\dots ,T_n)$ hei\ss t serialisierbar, wenn die Reihenfolge von 
+zwei beliebigen in Konflikt stehenden Operationen $O_1$ und $O_2$ in $S$ mit der Reihenfolge  
+dieser Operationen in einem seriellen Ausführungsplan $S_{ser}(T_1,T_2,\dots ,T_n)$ \"ubereinstimmt.
+\abs
+Bezeichnung: $S$ ist konflikt-\"aquivalent zu $S_{ser}$.
+\nl
+Notation: $S\equiv S_{ser}$.
+\end{definition}
+\pause
+\abs
+\begin{theorem}
+Sei $S(T_1,T_2,\dots ,T_n)$ ein serialisierbarer Ausführungsplan mit $S\equiv S_{ser}$ f\"ur einen 
+seriellen Ausführungsplan $S_{ser}(T_1,T_2,\dots ,T_n)$.
+\abs
+Dann f\"uhrt die Ausf\"uhrung von $S$ zum gleichen Ergebnis wie die Ausf\"uhrung von $S_{ser}$.
+\end{theorem}
+\end{frame}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\textbf{Ziel:}	Finde Kriterium f\"ur Serialisierbarkeit. 
+\pause
+\ \\[4pt]
+\begin{block}{\textbf{Serialisierbarkeitstest}}
+	Sei $S(T_1,T_2,\dots ,T_n)$ ein Ausführungsplan.
+	\begin{enumerate}
+		\item F\"ur jede Transaktion $T_i$, $i\in\{1,\ldots,n\}$ lege einen mit $T_i$ bezeichneten Knoten an.
+		\pause
+		\item F\"ur jedes Paar von im Ausf\"uhrungsplan $S$ in Konflikt stehenden Operationen $O_{j}(X)$ von $T_j$ und 
+		$O_{k}(X)$ von $T_k$, lege eine gerichtete 
+		% und mit $X$ bezeichnete Kante $T_j\underset{X}{\longrightarrow} T_k$ 	
+		Kante $T_j\longrightarrow T_k$ 
+		im Graphen an, wenn $O_{j}(X)$ vor $O_{k}(X)$ in $S$ auftritt.
+		\pause
+		\item Der Ausführungsplan $S(T_1,T_2,\dots ,T_n)$ ist serialisierbar, genau dann wenn der so entstandene Graph keine 
+		gerichteten Zykel hat.
+		% dessen Kanten alle den gleichen Bezeichner $X$ haben.
+	\end{enumerate}
+\end{block}
+\end{frame}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\textbf{Beispiel: Serialisierbarkeitstest}
+\begin{columns}
+	\begin{column}{.65\textwidth}
+		\begin{block}{}
+			{\small
+				Ausführungsplan $S$ der Transaktionen $T_1\,,\ldots ,\!T_4$:
+				\begin{equation*}
+				\begin{split}
+				T_1 &= (r_1(X)\text{-}w_1(Y)\text{-}w_1(X))\\
+				T_2 &= (w_2(Y)\text{-}r_2(X))\\
+				T_3 &= (r_3(Y))\\
+				T_4 &= (r_4(Y)\text{-}w_4(Y))\\
+				\\[-8pt]
+				S &= (r_1(X)\text{-}w_2(Y)\text{-}r_3(Y)\text{-}r_2(X)\text{-}w_1(Y)\text{-}r_4(Y)\text{-}w_1(X)\text{-}w_4(Y))
+				\end{split}
+				\end{equation*}
+			}
+		\end{block}
+	\end{column}
+	\begin{column}{.3\textwidth}
+		\begin{figure}
+			\includegraphics<2>[scale=0.6]{img/serializable-test1.png}
+			\includegraphics<3>[scale=0.6]{img/serializable-test2.png}
+			\includegraphics<4>[scale=0.6]{img/serializable-test3.png}
+			\includegraphics<5>[scale=0.6]{img/serializable-test.png}
+		\end{figure}
+	\end{column}
+\end{columns}
+\abs\ \abs
+\pause[5]
+Keine gerichteten Zykel $\Rightarrow S$ ist serialisierbar
+\end{frame}
+
+\begin{frame}{\insertsection}
+\framesubtitle{\insertsubsection}
+\begin{block}{\textbf{\"Ubungsaufgabe}}
+	Pr\"ufen Sie mit dem Serialisierbarkeitstest, welcher der beiden folgenden Ausführungspl\"ane serialisierbar ist.
+	\begin{equation*}
+	\begin{split}
+	S_\Romannum{1} &= (r_1(X) - r_2(X) - w_1(X) - w_2(X))\\
+	S_\Romannum{2} &= (r_1(X) - w_1(X) - r_2(X) - w_2(X) - r_2(Y) - w_1(Y))
+	\end{split}
+	\end{equation*}
+\end{block}
+\end{frame}
+
+%\subsection{Wiederherstellbare Ausführungspläne}
+%\begin{frame}
+%\frametitle{Recovery}
+%\framesubtitle{Wiederherstellbare Ausführungspläne}
+%\structure{Wann kann eine Transaktion wieder rückgängig gemacht werden?}
+%\begin{itemize}
+%\item Zurücksetzen von Transaktionen erfolgt grundsätzlich nur bei %Transaktionen, die im Database Log \textit{keinen} Commit-Eintrag haben.
+%\item Vor dem Commit-Eintrag im Database Log werden alle noch nicht persistierten Daten auf Platte geschrieben. 
+%\item Ist der Commit Point erreicht, wird eine Transaktion nicht mehr rückgängig gemacht.
+%\item Der Ausführungsplan muss ein Recovery zulassen: 
+%\begin{itemize}
+%\item Wiederherstellbare Ausführungspläne 
+%\item Nicht wiederherstellbare Ausführungspläne
+%\end{itemize}
+%\end{itemize}
+%\end{frame}
+
+%\begin{frame}
+%\frametitle{Recovery}
+%\framesubtitle{Wiederherstellbare Ausführungspläne}
+%\begin{definition}[Wiederherstellbare Ausführungspläne]
+%Ein Ausführungsplan $S$ ist wiederherstellbar, wenn keine Transaktion $T \in S$ ein Commit ausgibt, bis alle Transaktionen $T'$, die ein von $T$ gelesenes Objekt geschrieben haben, erfolgreich beendet wurden.
+%\end{definition}
+%\begin{block}{Beispiele}
+%\begin{itemize}
+%\item $S_a:r_1(X); r_2(X); w_1(X); r_1(Y); w_2(X); c_2; w_1(Y); c_1$ ist %wiederherstellbar
+%\item $S_b: r_1(X); w_1(X); r_2(X); r_1(Y); w_2(X); c_2; a_1$ ist nicht %wiederherstellbar
+%\end{itemize}
+%\alert{In $S_b$ liest $T_2$ den wert $X$, der zuvor von $T_1$ geschrieben wurde. %$T_2$ gibt aber vor $T_1$ das Commit aus. Daher ist der Ausführungsplan nicht wiederherstellbar.}
+%\end{block}
+%\end{frame}
+
+%\begin{frame}
+%\frametitle{Recovery}
+%\framesubtitle{Wiederherstellbare Ausführungspläne}
+%\begin{block}{Kaskadierendes Rollback}
+%$$S_c: r_1(X); w_1(X); r_2(X); r_1(Y); w_2(X); w_1(Y); a_1; a_2$$
+%Eine noch nicht bestätigte Transaktion (hier: $T_2$) muss wieder rückgängig gemacht werden, wenn Sie Werte aus einer anderen Transaktion (hier: $T_1$) gelesen hat, die dann abgebrochen wird. Der Abbruch der Transaktion zieht dann weitere Transaktionsabbrüche nach sich -- man spricht von \textit{kaskadierten} Abbrüchen.
+%\end{block}
+%\begin{definition}[Kaskadenfreier Ausführungsplan]
+%Ein Ausführungsplan $S$ ist kaskadenfrei, wenn alle $T_i \in S$ nur dann Objekte %aus $T_j \in S$ lesen, wenn $T_j$ bereits ein Commit geschickt hat.
+%\end{definition}
+%\end{frame}
+
+%\begin{frame}
+%\frametitle{Recovery}
+%\framesubtitle{Wiederherstellbare Ausführungspläne}
+%\structure{Strategien des Recovery Managers:}
+%\begin{itemize}
+%	\item Commits können verzögert werden, so dass eine Wiederherstellbarkeit des Ausführungsplanes erzwungen wird
+%	\item Ausführungspläne werden nach Möglichkeit kaskadenfrei erzeugt
+%\end{itemize}
+%\alert{Aber nicht alle Ausführungspläne können Recovery-Fähig gestaltet werden:}
+%$$S: r_1(X); w_1(X); r_2(Y); w_2(Y); r_1(Y); w_1(Y); r_2(X); w_2(X); c_1; c_2$$
+%\alert{Weder $T_1$ noch $T_2$ darf als erstes ein Commit schicken. Für diese Fälle müssen übergeordnete Mechanismen zur Verfügung stehen.}
+%\end{frame}
+
+%
+% @@@ hier weiter @@@
+%
+
+\section{Nebenläufigkeit}
+\subsection{Sperrprotokolle}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+\structure{Sperrprotokolle bilden eines der wichtigesten Konzepte zur Nebenläufigkeitskontrolle:}
+\begin{itemize}
+\item Gängigste Vertreter: Zwei-Phasen-Sperrprotokolle (2PL)
+\item Basieren auf dem \textit{Lock}-Konzept:
+\begin{itemize}
+\item Binäre Sperren
+\item Gemeinsame und exklusive Sperren 
+\end{itemize}
+\item Kritische Abschnitte werden vor dem Zugriff durch andere Transaktionen geschützt
+\end{itemize}
+\structure{Datenbank-Operationen:}
+\begin{itemize}
+\item \texttt{lock\_item(X)} sperrt ein Objekt X
+\item \texttt{unlock\_item(X)} hebt die Sperre für X wieder auf 
+\item \texttt{lock(X)} prüft, ob X mit einer Sperre belegt ist
+\end{itemize}
+\end{frame}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+\structure{Anwendung in DBMS:}
+\begin{itemize}
+\item Im Allgemeinen sind binäre Locks nicht für den Einsatz in DBMS geeignet, das sie zu restriktiv sind und damit den Grad der Nebenläufigkeit zu start einschränken.
+\item Konzept der exklusiven bzw. gemeinsamen Sperren (shared und exklusive locks) hier besser geeignet. 
+\item Operationen:
+\begin{itemize}
+\item \texttt{read\_lock(X)} setzt ein gemeinsames (shared) Lock auf Objekt X
+\item \texttt{write\_lock(X)} setzt ein exklusives Lock auf Objekt X 
+\item \texttt{unlock(X)} löst ein gemeinsames oder exklusives Lock auf Objekt X 
+\end{itemize} 
+\end{itemize}
+\end{frame}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+\structure{Vorgehen:}
+\begin{enumerate}
+\item Eine Transaktion $T$ muss die Operation \texttt{read\_lock(X)} oder \texttt{write\_lock(X)} ausführen, bevor eine \texttt{read\_item(X)}-Operation in $T$ ausgeführt wird
+\item Eine Transaktion $T$ muss die Operation \texttt{write\_lock(X)} ausführen, bevor eine \texttt{write\_item(X)}-Operation in $T$ ausgeführt wird
+\item Eine Transaktion $T$ muss die Operation \texttt{unlock(X)} ausführen, nachdem alle Operationen \texttt{read\_item(X)} und \texttt{write\_item(X)} in $T$ abgeschlossen sind
+\item Eine Transaktion $T$ gibt keine \texttt{read\_lock(X)}-Operation aus, wenn sie schon ein Lock für X hält (read- oder write lock)
+\item Eine Transaktion $T$ gibt keine \texttt{write\_lock(X)}-Operation aus, wenn sie schon ein Lock für X hält (read- oder write lock)
+\item Eine Transaktion $T$ gibt nur dann ein \texttt{unlock(X)} aus, wenn sie bereits ein Lock auf X hält
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\begin{definition}[Deadlock / Verklemmung]
+		Ein Deadlock entsteht, wenn jede Transaktion $T$ in einer Menge von zwei oder mehr Transaktionen auf ein Element wartet, welches vorher von einer anderen Transaktion $T'$ in der selben Menge gesperrt wurde.
+	\end{definition}	
+	\begin{columns}
+		\begin{column}{.48\textwidth}
+			\begin{tabular}{p{3.0cm}|p{3.0cm}}
+				\multicolumn{1}{c|}{\small $T_1$} & \multicolumn{1}{c}{\small $T_2$}\\\hline
+				\small \texttt{read\_lock(Y)} & \\
+				\small \texttt{read\_item(Y)} & \\
+				& \small \texttt{read\_lock(X)} \\
+				& \small \texttt{read\_item(X)} \\
+				\small \texttt{write\_lock(X)} & \\
+				& \small \texttt{write\_lock(Y)} \\
+			\end{tabular}
+		\end{column}
+		\begin{column}{.48\textwidth}			
+			\begin{center}
+				\begin{tikzpicture}
+				\node[draw, circle] (t1) {$T_1$}; 
+				\node[draw, circle] (t2) [right= 2.5cm of t1] {$T_2$};
+				\node[draw=none, ] (text) [right=0mm of t1]{\small Wait-For-Graph};
+				\draw (t1.north)  edge[out=90, in = 90, ->](t2.north); 
+				\draw (t2.south)  edge[out=270, in = 270, ->](t1.south);  
+				\end{tikzpicture}
+			\end{center}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+\begin{definition}[Basic 2PL]
+Eine Transaktion $T$ folgt dem Zwei-Phasen-Sperrprotokoll genau dann, wenn alle Lock-Operationen \textit{vor} der ersten Unlock-Operation durchgeführt werden.
+\end{definition}
+
+\structure{Damit wird das 2PL in die folgenden zwei Phasen unterteilt:}
+\begin{enumerate}
+\item Expand- bzw. Grow-Phase: 
+\begin{itemize}
+\item Neue Locks können angefordert werden 
+\item Keine Locks werden abgebaut 
+\end{itemize}
+\item Release- bzw. Shrink-Phase: 
+\begin{itemize}
+\item Bestehende Locks werden abgebaut 
+\item Es werden keine neuen Locks angefordert
+\end{itemize}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+\begin{definition}[Conservative 2PL]
+Eine Transaktion $T$ folgt dem konservativen Zwei-Phasen-Sperrprotokoll genau dann, wenn alle Locks \textit{vor} der eigentlichen Transaktionsausführung angefordert werden.
+\end{definition}
+\begin{itemize}
+\item Die Transaktion muss ihre sogenannten \textit{Read Sets} und \textit{Write Sets}, d.h. alle in ihr vorkommenden Objekte, die gelesen oder geschrieben werden, vordeklarieren. 
+\item Wenn ein Element nicht gesperrt werden kann, wird keines der Elemente gesperrt 
+\item Die Transaktion wartet dann solange, bis alle Elemente mit einem Lock belegt werden können
+\item Conservative 2PL ist Deadlock-Frei 
+\item \alert{Nicht immer können im laufenden Betrieb die Read- und Write Sets bestimmt werden, bevor die Transaktion ausgeführt wird.}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+\begin{definition}[Strict 2PL]
+Eine Transaktion $T$ gibt kein Write-Lock frei, bis sie 
+\begin{itemize}
+\item entweder abgebrochen wird oder 
+\item in einen \texttt{committed}-Zustand wechselt.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Rigorous 2PL]
+Eine Transaktion $T$ gibt kein Read- oder Write-Lock frei, bis sie 
+\begin{itemize}
+\item entweder abgebrochen wird oder 
+\item in einen \texttt{committed}-Zustand wechselt.
+\end{itemize}
+\end{definition}
+\alert{Während Conservative 2PL alle Elemente vor Beginn sperrt, gibt Rigorous 2PL keine Elemente vor Terminierung frei. Damit ist Rigorous 2PL bis zur Terminierung in der Expand-Phase.}
+\end{frame}
+
+\subsection{Deadlock-Vermeidung und Deadlock-Verhinderung}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+\structure{Es existieren eine Reihe von Protokollen zur Deadlock-Vermeidung:}
+\begin{itemize}
+\item Conservative 2PL setzt alle Locks im Voraus und wartet ansonsten so lange, bis alles Locks verfügbar sind. Dies geht auf Kosten der Parallelität.
+\item Zeitstempelbasierte Verfahren: Eine Transaktion $T_1$ erhält einen Zeitstempel $TS(T_1)$. 
+\begin{itemize}
+\item \textit{Wait-Die-Verfahren:} Wenn $TS(T_1)<TS(T_2)$, dann darf $T_1$ auf Lock-Freigabe warten, andernfalls wird $T_1$ abgebrochen. Die ältere Transaktion wartet auf die jüngere.
+\item \textit{Wound-Wait-Verfahren:} Wenn $TS(T_1)<TS(T_2)$, dann wird $T_2$ abgebrochen ($T_1$ verwundet $T_2$) -- in diesem Fall wartet die jüngere Transaktion auf die ältere.
+\end{itemize}
+\item Verfahren ohne Zeitstempel: 
+\begin{itemize}
+\item \textit{No-Waiting-Algorithmus}: Wenn eine Transaktion ein Lock nicht bekommt, wird sie sofort abgebrochen
+\item \textit{Cautious-Waiting-Algorithmus:} Eine Transaktion darf nur dann in einen wartenden Zustand verfallen, wenn die jeweils andere Transaktion nicht in einem wartenden Zustand ist. 
+\end{itemize}
+\end{itemize}
+\alert{Alle Verfahren sind Deadlock-Frei, aber es werden mitunter Transaktionen unnötig abgebrochen. $\Rightarrow$ Deadlock Detection} 
+\end{frame}
+
+\subsection{Deadlock Detection}
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+\structure{Wait-For-Graph-basierte Ansätze}
+\begin{itemize}
+\item Erzeuge für jede Transaktion einen Knoten im Graphen
+\item Eine Transaktion, die auf eine andere wartet, wird durch eine gerichtete Kante dargestellt. 
+\item Ein Deadlock entsteht genau dann, wenn der Graph einen Zyklus enthält. 
+\item \alert{Problematisch: Wann soll eine Prüfung durchgeführt werden und welche Transaktion soll abgebrochen werden?}
+\end{itemize}
+\structure{Timeouts}
+\begin{itemize}
+\item Die Vermutung eines Deadlocks entsteht genau dann, wenn eine Transaktion länger als eine vorgegebene Zeit wartet. 
+\item Einfacher Ansatz, aber: 
+\item \alert{Wie lange soll das Zeitfenster sein?}
+\end{itemize}
+\end{frame}
+
+\subsection{Isolationsstufen in SQL}
+
+\begin{frame}{\insertsection}
+	\framesubtitle{\insertsubsection}
+\structure{Mögliche Stufen:}
+\begin{itemize}
+\item READ UNCOMMITTED (Dirty Read, Lost Update, Phantom Read, Non-Repeatable Read)
+\begin{itemize}
+	\item Lese-Transaktionen können ohne Sperren lesen
+\end{itemize}
+\item READ COMMITTED (Lost Update, Phantom Read, Non-Repeatable Read)
+\begin{itemize}
+	\item Transaktionen lesen nur Werte, die festgeschrieben sind (Write Locks mit Strict 2PL)
+\end{itemize}
+\item READ STABILITY (Phantom Read)
+\begin{itemize}
+	\item Schreib- und Lese-Locks werden mit Strict 2PL angefordert, Phantom-Problem kann existieren
+\end{itemize}
+\item SERIALIZABLE
+\begin{itemize}
+	\item Ausschließliche Ausführung serialisierbarer Transaktionen
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\section*{Übungsaufgaben}
+
+\begin{frame}[t]
+	\frametitle{\insertsection}	
+	\begin{alertblock}{Transaktionen}
+		\begin{enumerate}
+			\item Definieren Sie den Begriff \textit{Transaktion}. Wie werden in SQL Transaktionen eingeleitet bzw. abgeschlossen?
+			\item Klassifizieren Sie die Fehlerquellen bei Transaktionen nach ihrer Eintrittswahrscheinlichkeit.
+			\item Erläutern Sie die unterschiedlichen Varianten der Zwei-Phasen-Sperrprotokolle.
+			\item Definieren Sie den Begriff \textit{Deadlock}. Wie kann ein Deadlock mittels eines Wait-For-Graphen identifiziert werden?
+			\item Experimentieren Sie mit dem RDBMS: 
+			\begin{enumerate}
+				\item Versuchen Sie, einen Deadlock zu provozieren.
+				\item Erläutern Sie das Verhalten eines RDBMS, wenn Transaktionen im Isolationslevel \texttt{READ COMMITTED} bzw. \texttt{READ UNCOMMITTED} arbeiten. Erstellen Sie ein Beispiel!
+			\end{enumerate}		
+		\end{enumerate}
+	\end{alertblock}
+\end{frame}
+
+\begin{frame}[t]
+	\frametitle{\insertsection}	
+	\begin{alertblock}{Serialisierbarkeit}
+		Gegeben sind die folgenden Ausführungspläne: 
+		\begin{itemize}
+			\item[$S_1$:] $r_1(X)\text{-} r_2(Y)\text{-} r_3(X)\text{-} w_3(X)\text{-} r_1(Y)\text{-} w_1(Y)\text{-} r_2(Z)\text{-} r_1(Z)\text{-} r_2(W)\text{-} r_1(W)\text{-} w_1(W)\text{-} w_3(Z)$
+			\item[$S_2$:] $w_1(X)\text{-} r_2(Y)\text{-} r_2(X) \text{-}w_3(Y)\text{-} r_3(Z)\text{-} r_4(P)\text{-} w_4(Z)\text{-} w_1(P)\text{-} r_1(Q)\text{-} w_3(Q)$
+			\item[$S_3$:] $r_1(X)\text{-} r_2(Z)\text{-} r_3(X)\text{-} r_1(Z)\text{-} r_2(Y)\text{-} r_3(Y)\text{-} w_1(X)\text{-} w_2(Z)\text{-} w_3(Y)\text{-} w_2(Y)$		
+		\end{itemize}
+	Erstellen Sie die Konfliktgraphen f\"ur diese Ausf\"uhrungspl\"ane. 
+	\nl
+	Welche Ausf\"uhrungspl\"ane sind serialisierbar?					
+	\end{alertblock}
+\end{frame}

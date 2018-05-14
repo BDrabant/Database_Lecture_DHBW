@@ -1,0 +1,1043 @@
+%!TEX root = Slides.tex
+\part{Datenbankprogrammierung}
+\label{part:programmierung}
+
+\section{Systemarchitekturen}
+\subsection{Grundlagen}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Benutzer und Anwendungen wollen auf Daten einer Datenbank zugreifen}\\[4pt]
+\begin{itemize}
+ \item Abfragedetails bzw. Abfragesprachen wie SQL sollen nach Möglichkeit vor Anwender verborgen bleiben
+ \item Datenhaltung soll austauschbar sein -- Umzug auf anderes (R)DBMS soll minimale bis keine Auswirkungen auf Anwendung haben
+ \item (R)DBMS soll zentrale Schnittstelle f\"ur Datenzugriff bilden
+\end{itemize}
+\abs
+Im Laufe der Zeit haben sich mehrere Architekturmodelle gebildet.
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}	
+\structure{2-Schichten-Architekturen (2-Tier Architectures)}
+\begin{figure}
+	\begin{tikzpicture}[
+ 		block/.style={draw, fill=white,	rectangle, minimum width={width("Magnetometer2222")+2pt},	font=\small}]
+			\node[block, fill=blue!30, align=center] (tier1) {Präsentations-\\Schicht};
+ 			\node[block, fill=blue!30, align=center] (tier2) [below=0mm of tier1] {Anwendungs-\\logik};
+ 			\node[block, fill=red!30, align=center] (tier3) [below=4mm of tier2] {Datenhaltung}; 
+ 			\draw (tier2) -- (tier3);				
+ 			\node[block,fill=blue!30, align=center] (tier21) [left=30mm of tier1] {Präsentations-\\Schicht};
+ 			\node[block,fill=red!30, align=center] (tier22) [below=4mm of tier21] {Anwendungs-\\logik};
+ 			\node[block,fill=red!30, align=center] (tier23) [below=0mm of tier22] {Datenhaltung}; 
+ 			\draw (tier21) -- (tier22);
+	\end{tikzpicture}
+	\caption{\label{fig:2tier}Zwei alternative 2-Schichten-Architekturen}
+\end{figure}		
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}		
+\onslide
+\structure{Eigenschaften klassischer 2-Schichten-Architekturen}\\[4pt]
+	\begin{itemize}
+		\item Programmiersprachen: häufig 4GL-Sprachen 
+		% Fourth generation language oder kurz 4GL: 
+		% Programmiersprachen bzw. -umgebungen, die darauf ausgerichtet sind, rasch – mit möglichst wenigen Codezeilen – 
+		% für bestimmten Anwendungsbereich Funktionen oder komplette Anwendungen schreiben zu können und
+		% Integration von Datenbank- und Benutzerschnittstellenanweisungen in die Programmiersprache
+		%    Befehle zur Abfrage und Manipulation einer Datenbank
+		%    Befehle zur einfachen Erstellung von Benutzeroberflächen
+		% 4GL-Programmiersprachen: Java, C++, auch SQL
+		\begin{itemize}
+			\item Speziell für die Entwicklung datenzentrischer Anwendungen
+			\item Meist automatische Erstellung von Benutzeroberflächen auf Basis des Datenmodells 
+		  \item Leichte und schnelle Entwicklung
+		\end{itemize}
+		\pause
+		\item Nachteile
+		\begin{itemize}
+			\item Starke Kopplung zwischen den einzelnen Schichten 
+			\item Keine Komponente kann ersetzt werden, ohne die anderen Komponenten anpassen zu m\"ussen
+			\item Große Systeme werden schnell un\"ubersichtlich 
+		\end{itemize}
+	\end{itemize}
+\pause
+\abs
+\structure{Durch die schwierige Wartbarkeit und mangelnde Flexibilität sind klassische 2-Schichten-Architekturen 
+	heute eher die Ausnahme.}\\[4pt]
+\pause
+\structure{Moderne 2-Schichten-Architekturen haben Eigenschaften von 3-Schichten-Architekturen
+	mit API-separierter Anwendungslogik und Datenhaltung in unterer Schicht}				
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{3-Schichten-Architekturen}\\[8pt]
+\begin{figure}
+	\centering
+	\begin{tikzpicture}[block/.style={draw,	fill=white,	rectangle, minimum width={width("Magnetometer2222")+2pt},	font=\small}]
+ 	\node[block, fill=blue!30, align=center] (tier1) {Client Tier};
+	\node[block, fill=green!30, align=center] (tier2) [below=4mm of tier1] {Middle Tier};
+	\node[block, fill=red!30, align=center] (tier3) [below=4mm of tier2] {Server Tier}; 
+	\draw (tier1) -- (tier2); 
+	\draw (tier2) -- (tier3);
+	\end{tikzpicture}
+	\qquad	
+	\begin{tikzpicture}[block/.style={draw,	fill=white,	rectangle, minimum width={width("Magnetometer2222")+2pt},	font=\small}]
+	\node[align=center] (tier1f) {};
+	\node[align=center] (tier2f) [below=4mm of tier1f] {$\Longrightarrow$};
+	\node[align=center] (tier3f) [below=4mm of tier2f] {}; 
+	\draw (tier1f) -- (tier2f); 
+	\draw (tier2f) -- (tier3f);
+	\end{tikzpicture}
+	\qquad
+	\begin{tikzpicture}[block/.style={draw,	fill=white,	rectangle, minimum width={width("Magnetometer2222")+2pt},	font=\small}]
+	\node[block, fill=blue!30, align=center] (tier1c) {Pr\"asentation};
+	\node[block, fill=green!30, align=center] (tier2c) [below=4mm of tier1c] {Anwendung};
+	\node[block, fill=red!30, align=center] (tier3c) [below=4mm of tier2c] {Datenhaltung}; 
+	\draw (tier1c) -- (tier2c); 
+	\draw (tier2c) -- (tier3c);
+	\end{tikzpicture}
+	\caption{\label{fig:3tier}3-Schichten-Architektur}
+\end{figure}		
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{Eigenschaften von 3-Schichten-Architekturen}\\[4pt]
+\begin{itemize}
+	\item Client-Schicht ausschließlich für Pr\"asentation der Ergebnisse und Daten 
+	\item Anwendungslogik befindet sich in mittlerer Schicht 
+	\begin{itemize}
+		\item Berechnungsvorschriften
+		\item Abläufe
+		\item $\dots$
+	\end{itemize}
+	\item Datenhaltung in Server-Schicht kein Bestandteil der Anwendungslogik 
+	\begin{itemize}
+		\item Einheitliche Zugriffskonzepte und Schnittstellen
+	\end{itemize}
+\end{itemize}
+\pause
+\abs
+\structure{Durch klare Schnittstellen/Zust\"andigkeiten k\"onnen die einzelnen Schichten modifiziert werden, 
+	ohne zu starte Einfl\"usse auf benachbarte Schichten bef\"urchten zu m\"ussen.}
+\\[4pt]
+\pause
+\structure{Zur Erinnerung: Moderne 2-Schichten-Architekturen haben Eigenschaften von 3-Schichten-Architekturen
+	mit API-separierter Anwendungslogik und Datenhaltung}				
+\end{frame}
+
+\subsection{Zugriff auf Datenbanken}
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{Zugriffskonzepte und Schnittstellen f\"ur programmatischen Zugriff auf Datenbanken}\\[4pt]
+\begin{description}
+	\item[ODBC] Open Database Connectivity. Klassische Schnittstelle für Zugriffe auf RDBMS
+	\item[OLEDB] Designierter Nachfolger von ODBC, jedoch komplexer
+	\item[DAO] Data Access Objects. In erster Linie von Microsoft entwickelt, kann auch auf ODBC-Quellen zugreifen
+	\item[ADO] ActiveX Data Objects. Zugriff auf tabellenartige Datenquellen (RDBMS, CSV etc.)
+	\item[ADO.NET] Reimplementierung von ADO auf~.NET-Framework von Microsoft
+	\item[JDBC] Java Database Connectivity. F\"ur Java-Programmierung, vergleichbar mit ODBC 
+\end{description}
+\pause
+\abs
+\structure{In Vorlesung: JDBC}
+\end{frame}
+
+\section{JDBC}
+\subsection{Einführung}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\begin{itemize}
+	\item Zuerst von Sun Microsystems (jetzt Oracle) entwickelt
+	\item DBMS-neutrale Schnittstelle (API) f\"ur Datenbankzugriffe
+	\item Direkte Nutzung von SQL-Statements[4pt]
+%	\pause
+%	\item Liegt in verschiedenen Versionen vor:
+%	\begin{itemize}
+%		\item JDBC V1 konnte herstellerunabhängige Verbindungen zu Datenbanken aufbauen und einfache Queries verarbeiten
+%		\item JDBC V2 konnte änderbare Ergebnismengen verarbeiten, außerdem kannte es neue Datentypen und Connection Pooling
+%		\item JDBC V3 wurde mit weiteren Änderungsmethoden sowie benutzerdefinierten Datentypen erweitert
+%		\item JDBC V4 ist in erster Linie ein Performance-Update 
+%	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Idee von JDBC}\\[4pt]
+\begin{columns}[c]
+	\begin{column}{.35\textwidth}
+		\begin{figure}
+			\begin{tikzpicture}[block/.style={draw,	fill=white,	rectangle, minimum width={width("Magnetometer2222")+2pt},	font=\small}]
+			\node[block, fill=blue!30, align=center] (tier1) {Java\\Application};
+			\node[block, fill=blue!20, align=center] (tier2) [below=0mm of tier1] {JDBC -- API};
+			\node[block, fill=orange!60, align=center] (tier2b) [below=0mm of tier2] {JDBC -- Impl.};
+			\node[drop shadow, fill=orange, cylinder,minimum height=0.5cm, draw, shape border rotate=90, minimum width=2cm] 
+			(db) [below=5mm of tier2b] {DB};
+			\draw (tier2b) -- (db);
+			\end{tikzpicture}
+			\caption{\label{fig:jdbc}JDBC-Konzept}
+		\end{figure}		
+	\end{column}
+	\begin{column}{.65\textwidth}
+		\begin{itemize}
+			\item JDBC-API befindet sich im Package \texttt{java.sql}
+			\item Java-Applikation und JDBC in Anwendungsschicht
+			\item Kommunikation mit Datenbanken durch (propriet\"are) \textbf{JDBC-Treiber}, die JDBC-API implementieren.
+		\end{itemize}
+	\end{column}
+\end{columns}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% wird voererst weggelassen
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\nowrite{ 
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\begin{columns}
+	\begin{column}{.48\textwidth}
+		\begin{figure}
+		 \pgfuseimage{jdbctypes}
+		 \tiny Bildquelle: Wikipedia
+		 \caption{JDBC Treibertypen}
+		\end{figure}		
+	\end{column}
+	\begin{column}{.48\textwidth}
+		\begin{itemize}
+			\item Typ-1-Treiber sind Bridge-Treiber zwischen Schnittstellentechnologien
+			\item Typ-2-Treiber arbeiten direkt proprietären Bibliotheken 
+			\item Typ-3-Treiber nutzen einen Middleware-Server
+			\item Typ-4-Treiber kommunizieren direkt mit der DB 
+		\end{itemize}
+		Die meisten JDBC-Treiber sind Typ-4-Treiber.
+	\end{column}
+\end{columns}
+\end{frame}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{API -- Erste Schritte}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{Die wichtigsten Objekte der JDBC-API}
+\begin{figure}\scalebox{1}{
+		\begin{tikzpicture}[
+		block/.style={draw,	fill=white,	rectangle, minimum width={width("Magnetometer2222")+2pt},	font=\small}]
+		\node[block, fill=blue!50, align=center] (rs) {ResultSet};
+		\node[block, fill=blue!50, align=center] (st) [below=10mm of rs] {Statement};
+		\node[block, fill=blue!50, align=center] (rs2) [right=40mm of rs] {ResultSet};
+		\node[block, fill=blue!50, align=center] (pst) [below=10mm of rs2] {PreparedStatement};
+		\node[block, fill=blue!50, align=center] (con) [below right=5mm of st] {Connection};
+		\node[block, fill=blue!50, align=center] (dm) [below=10mm of con] {DriverManager};
+		\draw (rs) -- (st); 
+		\draw (rs2) -- (pst); 
+		\draw (pst) -- (con);
+		\draw (st) -- (con); 
+		\draw (con) -- (dm);
+		\end{tikzpicture}
+	}
+\caption{\label{fig:APIStruktur}JDBC API-Struktur}
+\end{figure}					
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{\texttt{\textbf{DriverManager}} verwaltet die installierten und geladenen JDBC-Treiber}\\[8pt]
+\begin{columns}
+	\begin{column}{.3\textwidth}
+		\begin{figure}\scalebox{.45}{
+				\begin{tikzpicture}[block/.style={draw,	fill=white,	rectangle, minimum width={width("Magnetometer2222")+2pt},	font=\small}]
+				\node[block, fill=blue!10, align=center] (rs) {ResultSet};
+				\node[block, fill=blue!10, align=center] (st) [below=10mm of rs] {Statement};
+				\node[block, fill=blue!10, align=center] (rs2) [right=40mm of rs] {ResultSet};
+				\node[block, fill=blue!10, align=center] (pst) [below=10mm of rs2] {PreparedStatement};
+				\node[block, fill=blue!10, align=center] (con) [below right=5mm of st] {Connection};
+				\node[block, fill=blue!50, align=center] (dm) [below=10mm of con] {DriverManager};
+				\draw (rs) -- (st); 
+				\draw (rs2) -- (pst); 
+				\draw (pst) -- (con);
+				\draw (st) -- (con); 
+				\draw (con) -- (dm);
+				\end{tikzpicture}
+			}				
+		\end{figure}
+	\end{column}
+	\begin{column}{.65\textwidth}
+		\pause
+		Treiber in System/Applikation vorab bekannt machen:
+		\begin{enumerate}
+			\item JDBC-Treiberpaket (\texttt{jar}) als Teil des \texttt{CLASSPATH} 
+			\pause
+			\item JDBC-API in Applikation: \texttt{import java.sql.*} 
+			\pause
+			\item Laden des propriet\"aren JDBC-Treibers (alternativ):
+			\begin{itemize}
+				\item In Applikation: \texttt{Class.forName("{org}.postgresql.Driver");}
+				\item Bei Ausf\"uhrung: \texttt{java~-Djdbc.drivers=org.postgresql.Driver MyApp}
+			\end{itemize} 
+		\end{enumerate}
+		%\lstset{language=Java}
+		%\lstset{escapeinside={(*@}{@*)}}
+		%\begin{lstlisting}[xleftmargin=3ex,numbers=none]
+		%try {
+		%Class.forName("com.mysql.jdbc.Driver").newInstance(); (*@\label{lst:classforname}@*)
+		%} catch (Exception e) {
+		%...
+		%}
+		%\end{lstlisting}
+		%Zeile \ref{lst:classforname} lädt den Treiber unter dem angegebenen Namen, so dass er von der JVM verwendet werden kann.
+	\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\texttt{\textbf{Connection}}-Objekt repräsentiert Verbindung zur Datenbank}\\[8pt]
+\begin{columns}
+	\begin{column}{.3\textwidth}
+		\begin{figure}\scalebox{.45}{
+				\begin{tikzpicture}[block/.style={draw,	fill=white,	rectangle, minimum width={width("Magnetometer2222")+2pt},	font=\small}]
+				\node[block, fill=blue!10, align=center] (rs) {ResultSet};
+				\node[block, fill=blue!10, align=center] (st) [below=10mm of rs] {Statement};
+				\node[block, fill=blue!10, align=center] (rs2) [right=40mm of rs] {ResultSet};
+				\node[block, fill=blue!10, align=center] (pst) [below=10mm of rs2] {PreparedStatement};
+				\node[block, fill=blue!50, align=center] (con) [below right=5mm of st] {Connection};
+				\node[block, fill=blue!10, align=center] (dm) [below=10mm of con] {DriverManager};
+				\draw (rs) -- (st); 
+				\draw (rs2) -- (pst); 
+				\draw (pst) -- (con);
+				\draw (st) -- (con); 
+				\draw (con) -- (dm);
+				\end{tikzpicture}
+			}				
+		\end{figure}
+	\end{column}
+	\begin{column}{.65\textwidth}
+		Von \texttt{DriverManager} mit Hilfe einer \textit{connection URL} erzeugt:
+\lstset{language=Java}
+\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}[xleftmargin=3ex, numbers=none]
+ ...
+ String url = "jdbc:postgresql://<host><:port></database>";
+ Connection conn = DriverManager.getConnection(url,uname,pwd);
+ ...
+\end{lstlisting}
+	\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\texttt{\textbf{Statement}}}\\[8pt]
+\begin{columns}
+	\begin{column}{.3\textwidth}
+		\begin{figure}\scalebox{.45}{
+				\begin{tikzpicture}[block/.style={draw,	fill=white,	rectangle, minimum width={width("Magnetometer2222")+2pt},	font=\small}]
+				\node[block, fill=blue!10, align=center] (rs) {ResultSet};
+				\node[block, fill=blue!50, align=center] (st) [below=10mm of rs] {Statement};
+				\node[block, fill=blue!10, align=center] (rs2) [right=40mm of rs] {ResultSet};
+				\node[block, fill=blue!10, align=center] (pst) [below=10mm of rs2] {PreparedStatement};
+				\node[block, fill=blue!10, align=center] (con) [below right=5mm of st] {Connection};
+				\node[block, fill=blue!10, align=center] (dm) [below=10mm of con] {DriverManager};
+				\draw (rs) -- (st); 
+				\draw (rs2) -- (pst); 
+				\draw (pst) -- (con);
+				\draw (st) -- (con); 
+				\draw (con) -- (dm);
+				\end{tikzpicture}
+			}				
+		\end{figure}
+	\end{column}
+	\begin{column}{.65\textwidth}
+		\begin{itemize}
+			\item \texttt{Statement} repr\"asentiert einen SQL-Befehl
+			\item Mit \texttt{Connection}-Objekt erzeugt:
+		\end{itemize}
+\lstset{language=Java}
+\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}[numbers=none]
+...
+Statement stmt = conn.createStatement(); 
+...
+\end{lstlisting}
+	 \begin{itemize}
+	  \item Ausf\"uhrung des \texttt{Statement}-Objekts f\"uhrt zur Rückgabe eines \texttt{ResultSet} ...
+   \end{itemize}
+	\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\texttt{\textbf{ResultSet}}}\\[8pt]
+\begin{columns}
+	\begin{column}{.3\textwidth}
+		\begin{figure}\scalebox{.45}{
+				\begin{tikzpicture}[block/.style={draw,	fill=white,	rectangle, minimum width={width("Magnetometer2222")+2pt},	font=\small}]
+				\node[block, fill=blue!50, align=center] (rs) {ResultSet};
+				\node[block, fill=blue!10, align=center] (st) [below=10mm of rs] {Statement};
+				\node[block, fill=blue!10, align=center] (rs2) [right=40mm of rs] {ResultSet};
+				\node[block, fill=blue!10, align=center] (pst) [below=10mm of rs2] {PreparedStatement};
+				\node[block, fill=blue!10, align=center] (con) [below right=5mm of st] {Connection};
+				\node[block, fill=blue!10, align=center] (dm) [below=10mm of con] {DriverManager};
+				\draw (rs) -- (st); 
+				\draw (rs2) -- (pst); 
+				\draw (pst) -- (con);
+				\draw (st) -- (con); 
+				\draw (con) -- (dm);
+				\end{tikzpicture}
+			}				
+		\end{figure}
+	\end{column}
+	\begin{column}{.65\textwidth}
+		\begin{itemize}
+			\item \texttt{ResultSet} als Ergebnis der Ausf\"uhrung eines \texttt{Statement}-Objekts
+			\item \texttt{ResultSet} repr\"asentiert und beinhaltet die Ergebnismenge (Tupeln) eines SQL-Befehls
+		\end{itemize}
+	\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{\texttt{\textbf{ResultSet}} und \texttt{\textbf{Statement}}}\\[8pt]
+\structure{Unterschiedliche Ausf\"uhrungsmethoden:}
+\begin{itemize}
+	\item \texttt{Statement.execute(String sql)}
+	\begin{itemize}
+		\item F\"uhrt SQL-Befehl \texttt{sql} auf Datenbank aus
+		\item Rückgabe: \texttt{true}, wenn Ausf\"uhrung erfolgreich, sonst \texttt{false}
+		\item Resultate danach mit Methode \texttt{getResult()} abrufen. R\"uckgabe: \texttt{ResultSet}
+	\end{itemize}
+	\pause 
+	\item \texttt{Statement.executeQuery(String sql)}
+	\begin{itemize}
+		\item F\"uhrt SQL-Befehl \texttt{sql} aus 
+		\item R\"uckgabe: \texttt{ResultSet} 
+		\item \texttt{ResultSet} ist \texttt{null} im Fehlerfall
+	\end{itemize}
+	\pause 
+	\item \texttt{Statement.executeUpdate(String sql)}
+	\begin{itemize}
+		\item F\"uhrt SQL-Befehl \texttt{sql} aus
+		\item R\"uckgabe: Anzahl (\texttt{int}) der vom Update betroffenen Tupel
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\texttt{\textbf{ResultSet}} -- Beispiel}\\[4pt]
+\lstset{language=Java}
+\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}[xleftmargin=3ex, numbers=none, showstringspaces=false]
+...
+Statement stmt = conn.createStatement(); 
+String sql = "SELECT * FROM \"MySchema\".\"Film\"";
+
+if(stmt.execute(sql)){
+ ResultSet rs = stmt.getResult(); 
+ // Resultat mit ResultSet rs verarbeiten - naechste Folie
+} 
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{\texttt{\textbf{ResultSet}}}\\[4pt]
+\begin{itemize}
+\item \texttt{ResultSet} weist intern eine tabellarische Struktur auf und kann daher \"ahnlich wie eine Relation gesehen werden
+\pause
+\item F\"ur das Traversieren eines \texttt{ResultSet} werden entsprechende Methoden bereitgestellt
+\begin{itemize}
+\item \texttt{beforeFirst()} setzt Zugriffs-Pointer \textbf{vor} den ersten Eintrag
+\item \texttt{first()} setzt den Zugriffs-Pointer \textbf{auf} den ersten Eintrag
+\item \texttt{next()} setzt den Zugriffs-Pointer auf den nächsten Eintrag
+\end{itemize}
+\item Traversieren eines \texttt{ResultSet} meist mit Hilfe einer Schleife -- n\"achste Folie
+\pause
+\item Typisierter Zugriff auf Daten eines Tupels des \texttt{ResultSet}:
+\begin{itemize}
+\item \texttt{getInt(..)}, \texttt{getString(..)},\texttt{getDouble(..)}, ...
+\item Zugriff über Spaltenindex bzw.~Spaltenname m\"oglich: z.B. \texttt{getInt(3)}, \texttt{getInt("Jahr")},
+\texttt{getString("Name")}
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\texttt{\textbf{ResultSet}} -- Beispiel}
+\lstset{language=Java}
+\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}[xleftmargin=3ex, showstringspaces=false, numbers=none]
+...			
+ResultSet rs = stmt.getResult(); 
+
+//ResultSet - Zeiger vor ersten Eintrag stellen
+rs.beforeFirst(); 
+
+//Durchlaufen des ResultSet
+while (rs.next()) {
+ System.out.println("Name des Films: " + rs.getString(2)); 
+}
+...
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\texttt{\textbf{ResultSet}} -- Metadaten}\\[4pt]
+\begin{itemize}
+\item \texttt{ResultSet} enthält Metadaten (Attributnamen, Datentypdefinitionen etc.).
+\item Diese Informationen können mit einem Objekt vom Typ \texttt{ResultSetMetaData} abgerufen werden.
+\end{itemize}
+Beispiel:
+\lstset{language=Java}
+\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}[xleftmargin=3ex, numbers=none]
+...
+ResultSet rs = stmt.getResult(); 
+ResultSetMetaData rsmd = rs.getMetaData(); 
+
+for (int i = 1; i <= rsmd.getColumnCount(); i++){
+ String spaltenname = rsmd.getColumnLabel(i);
+ String spaltentyp = rsmd.getColumnTypeName(i);
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\structure{\texttt{\textbf{PreparedStatement}}}\\[8pt]
+\begin{columns}
+	\begin{column}{.3\textwidth}
+		\begin{figure}\scalebox{.45}{
+				\begin{tikzpicture}[block/.style={draw,	fill=white,	rectangle, minimum width={width("Magnetometer2222")+2pt},	font=\small}]
+				\node[block, fill=blue!10, align=center] (rs) {ResultSet};
+				\node[block, fill=blue!10, align=center] (st) [below=10mm of rs] {Statement};
+				\node[block, fill=blue!10, align=center] (rs2) [right=40mm of rs] {ResultSet};
+				\node[block, fill=blue!50, align=center] (pst) [below=10mm of rs2] {PreparedStatement};
+				\node[block, fill=blue!10, align=center] (con) [below right=5mm of st] {Connection};
+				\node[block, fill=blue!10, align=center] (dm) [below=10mm of con] {DriverManager};
+				\draw (rs) -- (st); 
+				\draw (rs2) -- (pst); 
+				\draw (pst) -- (con);
+				\draw (st) -- (con); 
+				\draw (con) -- (dm);
+				\end{tikzpicture}
+			}				
+		\end{figure}
+	\end{column}
+	\begin{column}{.65\textwidth}
+		\begin{itemize}
+			\item H\"aufig wiederkehrende Statements können durch ein \texttt{PreparedStatement} vorbereitet werden. 
+			\item DBMS nimmt \texttt{PreparedStatement} entgegen
+			\begin{itemize}
+				\item bereitet den optimierten Ausführungsplan intern vor
+				\item verwendet den optimierten Ausführungsplan fortan (im Kontext einer \texttt{Connection})
+			\end{itemize}
+		\end{itemize}
+	\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+\structure{\texttt{\textbf{PreparedStatement}} -- Syntax}
+\lstset{language=Java}
+\lstset{escapeinside={(*@}{@*)}}
+\begin{lstlisting}[xleftmargin=3ex, showstringspaces=false]
+String sql = "SELECT * FROM \"Film\" WHERE \"Name\" = ? AND \"Jahr\" = ?";
+
+// PreparedStatement in RDBMS im Kontext der Connection conn
+PreparedStatement pst = conn.prepareStatement(sql); 
+
+// Parameter fuer PreparedStatement setzen
+pst.setString(1,'Tatort'); (*@\label{lst:pst}@*)
+pst.setInt(2,2011); (*@\label{lst:pst2}@*)
+
+// SQL mit PrepraredStatement ausfuehren
+ResultSet rs = pst.executeQuery(); 
+\end{lstlisting}
+\pause
+\begin{itemize}
+	\item Im SQL-String \texttt{sql} werden \texttt{?} als Platzhalter f\"ur Parameter verwendet.
+	\item Diese Platzhalter werden mit \texttt{set}-Methoden belegt.
+	\begin{itemize}
+		\item In Zeile \ref{lst:pst} wird der erste Parameter auf den Wert \texttt{'Tatort'} gesetzt. 
+		\item In Zeile \ref{lst:pst2} wird der zweite Parameter auf den Wert \texttt{2011} gesetzt. 
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\subsection{Connection Pooling}
+
+\begin{frame}[t]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+    \structure{Der Auf- und Abbau von Verbindungen ist ein Flaschenhals bei der Datenbankprogrammierung}
+
+    \begin{itemize}
+    	\item Aufbau von Verbindungen kostet im Allgemeinen sehr viel Zeit 
+    	\item Auf einer einzelnen Verbindung kann nicht parallel gearbeitet werden, d.h. mehrere Threads müssen 
+    	ihre eigenen Verbindungsobjekte erzeugen
+    \end{itemize}
+
+    \begin{block}{Connection Pooling}
+    \begin{itemize}
+    	\item Mehre Verbindungen werden beim Start der Anwendung aufgebaut und in einem Pool gehalten
+    	\item Die Verbindungen aus dem Pool können sofort verwendet werden
+    	\item Nicht mehr benötigte Verbindungen werden nicht abgebaut, sondern in den Pool zurückgegeben 
+    	\item Mit Parametern kann das Verhalten des Pools gesteuert werden (wie viele Verbindungen usw.)
+    \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+    \structure{Ein Connection Pooling muss nicht mehr selbst implementiert werden}
+
+    Es gibt Bibliotheken, die ein Connection Pooling JDBC-Konform implementieren. Eine dieser Bibliotheken ist 
+    die Open Source Bibliothek C3PO.
+
+    \begin{itemize}
+    	\item C3PO kann heruntergeladen werden unter \url{http://sourceforge.net/projects/c3p0/}
+    	\item Paket muss im \texttt{CLASSPATH} liegen und kann sofort verwendet werden
+    	\item Verbindungen zu Datenbanken werden über eine eigene Datenquelle (Data Source) bereitgestellt
+    \end{itemize} 
+\end{frame}
+
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+    \begin{lstlisting}[xleftmargin=3ex]
+//Erstellen einer Datenquelle
+ComboPooledDataSource cpds = new ComboPooledDataSource(); 
+cpds.setDriverClass("com.mysql.jdbc.Driver");
+cpds.setJdbcUrl("jdbc:mysql://localhost/wwidb1");
+cpds.setUser("db");
+cpds.setPassword("db"); 
+cpds.setMinPoolSize(5); 
+cpds.setAcquireIncrement(5);
+cpds.setMaxPoolSize(100); 
+
+//Verwendung der Datenquelle
+Connection con = cpds.getConnection();
+...
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+    \structure{Die meisten Application Server für Web Anwendungen verfügen über eine eigene Connection Pooling Möglichkeit mittels JNDI}
+    \vspace{3mm}
+
+    Beispiel Apache Tomcat: \texttt{server.xml} und Java-Code gegenübergestellt
+    \begin{columns}
+
+	    \begin{column}{.48\textwidth}
+	    	\lstset{language=xml}
+			\lstset{escapeinside={(*@}{@*)}}
+
+			\begin{lstlisting}[xleftmargin=3ex, basicstyle=\ttfamily\tiny]
+<Context>
+ <Resource name="jdbc/TestDB" 
+  auth="Container" type="javax.sql.DataSource" 
+  maxActive="100" 
+  maxIdle="30" 
+  maxWait="1000" 
+  username="db" 
+  password="db" 
+  driverClassName="com.mysql.jdbc.Driver"
+  url="jdbc:mysql://localhost:3306/wwidb1"/> 
+</Context>
+			\end{lstlisting}
+	    \end{column}
+	    \begin{column}{.48\textwidth}
+\lstset{language=Java}
+			\lstset{escapeinside={(*@}{@*)}}
+			\begin{lstlisting}[xleftmargin=3ex, basicstyle=\ttfamily\tiny]
+//Initialisierung
+Context initContext = new InitialContext(); 
+Context envContext = 
+(Context)initContext.lookup("java:/comp/env");
+DataSource ds = 
+ (DataSource)envContext.lookup("jdbc/TestDB");
+			
+//Jetzt kann eine Verbindung angefordert werden
+Connection conn = ds.getConnection(); 
+			\end{lstlisting}
+	    \end{column}
+    \end{columns}
+Der Application Server verwaltet einen eigenen Connection Pool und bedient Java-Anwendungen 
+
+\end{frame}
+
+\subsection{Entwicklung von Anwendungen mit Datenbankanbindung}
+
+\begin{frame}
+	\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{Wie es \textbf{nicht} geht:}
+	\begin{itemize}
+		\item Datenbankverbindungen und -abfragen im Code verstreuen
+		\item Immer wieder durch ResultSets iterieren und quasi tabellarisch arbeiten
+	\end{itemize}
+	
+	\alert{Entwerfen Sie eine geeignete Softwarearchitektur und nutzen Sie die Möglichkeiten, die Ihnen die Objektorientierung bietet!}
+	
+\end{frame}
+
+\begin{frame}
+	\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{Systematischer Aufbau:}
+	\begin{itemize}
+		\item Entwurf von Containerklassen für Ihre Entitäten, die \textit{ausschließlich} aus getter- und setter-Methoden bestehen
+		\item Entwurf einer Zugriffsschnittstelle, mit der  auf den Containerklassen gearbeitet wird
+		\item Implementierung der Schnittstelle für die jeweils konkrete Datenhaltung!
+		\item Greifen Sie im Code \textit{ausschließlich über die Schnittstelle} auf die Daten zu, am besten mittels einer Generator- oder Factory-Klasse!
+	\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{Beispiel einer Containerklasse:}
+	\begin{lstlisting}[xleftmargin=3ex]
+package datamodel; 
+
+public class Auto {
+   private int auto_id; 
+	
+   private String farbe; 
+	
+   private int anzahlRaeder; 
+	
+   public int getId() { return this.auto_id; }
+
+   public void setId(int id) { this.id = id;  }
+
+...
+   
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{Beispiel Zugriffsinterface}
+	\begin{lstlisting}[xleftmargin=3ex]
+package repository; 
+	
+public interface IRepository {
+  public Auto createAuto(); 
+		
+  public Auto[] lookupAutoByFarbe(String farbe); 
+  		
+  public Auto lookupAutoById(int id); 
+		
+  public void saveAuto(Auto a); 	
+}
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{Beispiel Implementierungsklasse (Pseudocode)}
+	\begin{lstlisting}[xleftmargin=3ex]
+package repository; 
+public class PostgresqlRepository implements IRepository {
+   private Connection _con; 
+  ...
+   public Auto lookupAutoById(int id) {
+      PreparedStatement pst = 
+         new PreparedStatement("SELECT * from Auto WHERE id = ?"); 
+      pst.setInt(1,id); 
+      ResultSet rs = pst.execute(); 
+	  Auto a = new Auto; 
+      while (rs.next()) {
+	        a.setId(rs.getInt(0));
+	        a.setFarbe(rs.getFarbe(1));
+	        ...
+      }
+   return a;
+   }
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{Factory-Klasse (Pseudocode)}
+	\begin{lstlisting}[xleftmargin=3ex]
+package repository; 
+public class RepoFactory {
+   ...
+   public static IRepository createRepository() {
+      if (config.getDatabase() == 'Postgresql') {
+         ...
+         return new PostgresqlRepository(); 
+      } else if (config.getDatabase() == 'MySQL') {
+          ...
+          return new MysqlRepository(); 
+      }
+   }
+}
+	\end{lstlisting}
+	Es wird davon ausgegangen, dass im Objekt \texttt{config} eine Konfigurationsdatei eingelesen wurde, in der die Datenbank konfiguriert wurde.
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{\insertsection}
+	\framesubtitle{\insertsubsection}
+	\structure{Verwendung der Klassen:}
+	\begin{lstlisting}[xleftmargin=3ex]
+public static void main(String args[]) {
+   
+   IRepository repo = RepoFactory.createRepository(); 
+   Auto auto = repo.lookupAutoById(4711);
+
+   Auto nocheinauto = new Auto(); 
+   nocheinauto.setFarbe("schwarz");
+   repo.saveAuto(nocheinauto);   
+}
+	\end{lstlisting}
+\end{frame}
+
+%
+%\section{Objekt-relationales Mapping}
+%\subsection{Begriffserklärung}
+%
+%\begin{frame}[t]\frametitle{Objekt-relationales Mapping}
+%    \framesubtitle{Begriffserklärung}
+%    \structure{In der objektorientierten Welt sind Objekte meist start strukturiert.}
+%    \begin{itemize}
+%    	\item Starke Schachtelung von Objekten
+%    	\item Polymorphie und abstrakte Klassen
+%    	\item Schnittstellenkonzepte
+%    	\item Vererbungshierarchien 
+%    \end{itemize}
+%Diese Strukturen müssen mittels \textit{object flattening} auf flache Tabellen abgebildet werden und wieder zurückgewandelt werden können.
+%	\begin{definition}[Object-Relational Impedance Mismatch]
+%	Unter dem Begriff wird die grundlegende Unverträglichkeit von objektorientierten Programmiersprachen mit den Konzepten relationaler Datenbanken verstanden. Es 
+%	besteht ein \textit{Paradigmakonflikt}.	
+%	\end{definition}
+%\end{frame}
+%
+%\againframe<2>{isa}
+%
+%\begin{frame}[t]\frametitle{Objekt-relationales Mapping}
+%	\framesubtitle{Ansätze für die Abbildung von is-a -- Beziehungen}
+%	\structure{Es wurden verschiedene Möglichkeiten diskutiert:}
+%	\begin{itemize}
+%		\item One Table per Class Hierarchy 
+%		\begin{itemize}
+%			\item \texttt{null}-Values 
+%			\item Normalisierung? 
+%		\end{itemize}
+%		\item One Table per Concrete Class 
+%		\begin{itemize}
+%			\item Informationen der Vererbung gehen verloren: Abstrakte Klasse existiert nicht mehr im Datenmodell, Unterscheidung, welches Attribut zur abstrakten Klasse und zur konkreten Klasse gehört ist umständlich
+%		\end{itemize}
+%		\item One Table per Class
+%		\begin{itemize}
+%			\item Alle Informationen vorhanden, aber erhöhter Join-Aufwand 
+%		\end{itemize}
+%	\end{itemize}
+%   \alert{Da es sich hier um ein grundsätzliches Abbildungsproblem handelt, gibt es keine einheitliche Lösung -- bestenfalls eine Vereinfachung für den Entwickler.}
+%\end{frame}
+%
+%\begin{frame}[t]\frametitle{Objekt-relationales Mapping}
+%	\framesubtitle{Verschiedene Konzepte}
+%	Da ein Anwendungsentwickler auf Objekten arbeitet, musst die Speicherung der Daten (respektive die Zerlegung der Objekte in Relationen) manuell durchgeführt werden.
+%	Es gibt verschiedene Ansätze, dies zu vereinfachen
+%	\begin{itemize}
+%		\item Der Einsatz objektorientierter Datenbanken 
+%		\begin{itemize}
+%			\item Objekte konnten direkt in der Datenbank abgelegt werden
+%			\item Nicht standardisiert, Auslesen der Objekte nur mit der Anwendung möglich
+%			\item Kommen in speziellen Anwendungsfällen vor
+%		\end{itemize}
+%		\item Erweiterung objektorientierter Programmiersprachen um relationale Konzepte
+%		\begin{itemize}
+%			\item SQL wird direkt im Code eingebettet
+%			\item Lösung widerspricht in großen Teilen den objektorientierten Ansätzen
+%			\item Wird in der heutigen Entwicklung fast nicht mehr eingesetzt
+%		\end{itemize}
+%	\end{itemize}
+%\end{frame}
+%
+%
+%\subsection{O/R-Mapper}
+%
+%\begin{frame}[t]\frametitle{Objekt-relationales Mapping}
+%	\framesubtitle{O/R-Mapper Allgemein}
+%	\structure{O/R-Mapper bilden eine Zwischenschicht zwischen Anwendung und Datenbank}
+%	\begin{itemize}
+%		\item Sie erledigen das Mapping von Objekten auf Relationen 
+%		\item Transparent für den Anwendungsentwickler
+%		\item Weite Verbreitung 
+%		\item Viele unterschiedliche Implementierungen und Standards 
+%		\begin{itemize}
+%			\item Microsoft .NET Entity Framework 
+%			\begin{itemize}
+%				\item Alle .NET-Programmiersprachen (C\#, Visual Basic, Visual C++)
+%				\item Gute Unterstützung verschiedener Datenbanken
+%				\item Unterstützt Code-First und Model-First Ansätze
+%			\end{itemize}
+%			\item Java Persistence API (JPA)
+%			\begin{itemize}
+%				\item Standardisierte O/R-Mapper-Spezifikation für Java
+%			\end{itemize}
+%		\end{itemize}
+%	\end{itemize}
+%\end{frame}
+%
+%
+%\begin{frame}[t]\frametitle{Objekt-relationales Mapping}
+%	\framesubtitle{Java Persistence API (JPA)}
+%	\structure{Die JPA wurde erstmals in 2006 veröffentlicht}
+%	\begin{itemize}
+%		\item Standardisierte Programmierschnittstelle (API)
+%		\begin{itemize}
+%			\item Bietet Methoden zum Speichern, Modifizieren und Laden von Objekten aus relationalen Datenbanken
+%			\item Unterstützung von Polymorphie / Vererbung 
+%			\item Verwendet Java Annotations (z.B. \texttt{@Entity, @OneToMany})
+%		\end{itemize}
+%		\item Java Persistence Query Language 
+%		\begin{itemize}
+%			\item Eigene, an SQL angelehnte Sprache
+%		\end{itemize}
+%		\item XML-Datei zur Konfiguration des relationalen Mappings
+%		\begin{itemize}
+%			\item Mittels einer \texttt{persistence.xml}-Datei kann das Mapping genau definiert werden
+%		\end{itemize}
+%		\item Viele Implementierungen der JPA, z.B. \textit{Eclipselink} oder \textit{Hibernate}
+%	\end{itemize}
+%\end{frame}
+%
+%
+%\begin{frame}[t]\frametitle{Objekt-relationales Mapping}
+%	\framesubtitle{EclipseLink}
+%	\structure{JPA-Referenzimplementierung \textit{EclipseLink}}
+%	\begin{itemize}
+%		\item Kann unter \url{https://www.eclipse.org/eclipselink/} heruntergeladen werden
+%		\item Umfasst noch mehr als nur eine JPA-Implementierung -- in der Vorlesung wird jedoch nur auf den JPA-Teil eingegangen
+%		\item Konfiguration über \texttt{persistence.xml}
+%		\item Verwendung von Annotationen im Code
+%		\item Muss im \texttt{CLASSPATH} vorhanden sein
+%	\end{itemize}
+%\end{frame}
+%
+%
+%
+%\begin{frame}[fragile]\frametitle{Objekt-relationales Mapping}
+%    \framesubtitle{Beispiel persistence.xml}
+%    \lstset{language=xml}
+%	\lstset{escapeinside={(*@}{@*)}}
+%
+%	\begin{lstlisting}[xleftmargin=3ex]
+%<?xml version="1.0" encoding="UTF-8" ?>
+%<persistence xmlns:xsi=...> 
+% <persistence-unit name="filme" transaction-type="RESOURCE_LOCAL">   
+% <class>de.test.Film</class>   
+% <class>de.test.Genre</class>   
+% <properties>     
+%  <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>     
+%  <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost/wwidb1"/>
+%  <property name="javax.persistence.jdbc.user" value="db"/>
+%  <property name="javax.persistence.jdbc.password" value="db"/>
+%  <property name="eclipselink.ddl-generation" value="create-tables"/>
+%  <property name="eclipselink.ddl-generation.output-mode" value="database"/>
+% </properties>
+%</persistence-unit>
+%</persistence> 
+%	\end{lstlisting}
+%\end{frame}
+%
+%\begin{frame}[fragile]\frametitle{Objekt-relationales Mapping}
+%    \framesubtitle{Beispiel Java-Code}
+%    \lstset{language=Java}
+%	\lstset{escapeinside={(*@}{@*)}}
+%
+%	\begin{lstlisting}[xleftmargin=3ex, basicstyle=\ttfamily\tiny]
+%package de.test;
+%import javax.persistence.CascadeType;
+%import javax.persistence.Entity;
+%import javax.persistence.GeneratedValue;
+%import javax.persistence.GenerationType;
+%import javax.persistence.Id;
+%import javax.persistence.OneToOne;
+%
+%@Entity
+%public class Film {
+%
+%@Id
+%@GeneratedValue(strategy=GenerationType.IDENTITY)
+%private long id ; 
+%
+%private String name ; 
+%
+%private int jahr;
+%
+%@OneToOne(cascade=CascadeType.PERSIST)
+%private Genre genre ; 
+%
+%//Getter und Setter fuer private Attribute
+%...
+%}
+%\end{lstlisting}
+%\end{frame}
+
+%\section*{Zusammenfassung}
+%
+%\begin{frame}{Zusammenfassung}
+%	\begin{itemize}
+%		\item Grundlagen über Systemarchitekturen
+%		\begin{itemize}
+%					\item 2-Tier
+%					\item 3-Tier
+%		\end{itemize}		
+%		\item JDBC
+%		\begin{itemize}
+%			\item Einführung
+%			\item API-Struktur
+%			\item Connection Pooling
+%		\end{itemize}
+%		\item Object-relationaler Impedance Mismatch und O/R - Mapper
+%	\end{itemize}
+%
+%\end{frame}
+%

@@ -1,0 +1,765 @@
+%!TEX root = Slides.tex
+
+\section{Vom ER-Modell zum relationalen Modell}
+\subsection*{Relationen und Attribute}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\onslide
+Aufgabe: ER-Modelle in relationale Datenmodelle \"uberf\"uhren
+\nl
+Jedoch einige Besonderheiten bei \"Uberf\"uhrung zu beachten
+\pause
+\abs
+ \begin{itemize}
+	\item Entit\"atstypen entsprechen Relationenschemata
+	\item Entit\"aten entsprechen Tupeln einer Relation 
+	\item Beziehungen k\"onnen ausgedr\"uckt werden durch
+	 \begin{itemize}
+		\item Fremdschl\"ussel
+		\item Relationenschemata
+	 \end{itemize}
+ \end{itemize}
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\onslide
+\structure{Entit\"aten und Attribute i.~d.~R.~direkt in ein Relationenschema \"uberf\"uhrbar:}
+\begin{columns}
+	\begin{column}{.48\textwidth}			
+		\begin{figure}
+			\begin{tikzpicture}[node distance=2em]
+			\node[entity] (Kunde) {\small Kunde}; 
+			\node[attribute] (knr) [above left=2em of Kunde] {\key{\small KNR}} edge (Kunde); 
+			\node[attribute] (name) [above right=2em of Kunde] {\small Vorname} edge (Kunde); 
+			\node[attribute] (nname) [above=2em of Kunde] {\small Nachname} edge (Kunde); 
+			\end{tikzpicture}
+		\end{figure}
+	\end{column}
+	\pause
+	$\quad\Longrightarrow$
+	\begin{column}{.48\textwidth}
+		\begin{center}
+			\centerline{\small\texttt{Kunde(\key{KNR},Vorname,Nachname)}}
+			\begin{tabular}{|c|c|c|}\hline
+				\multicolumn{3}{|c|}{\small \textbf{Kunde}}\\\hline\hline
+				\cellcolor{Green}\small \textbf{\key{KNR}} & \small \textbf{Vorname} & \small \textbf{Nachname}  \\\hline 
+				\cellcolor{Green}\small 1 &\small Elsa &\small Musterfrau \\\hline 
+				\cellcolor{Green}\small 2 & \small Max &\small  Mustermann  \\\hline 
+				\cellcolor{Green}\small 3 & \small Hans &\small  Fritsche  \\\hline 
+				\cellcolor{Green}$\cdots$ & $\cdots$ & $\cdots$  \\\hline
+			\end{tabular}
+		\end{center}
+	\end{column}
+\end{columns}
+\abs
+\begin{itemize}
+	\item Name der Entit\"at wird zum Namen des Relationenschemas.
+	\item Attribute werden direkt übernommen. 
+	\item Schl\"usseleigenschaften bleiben erhalten.
+\end{itemize}
+\end{frame}
+   
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\begin{block}{\textbf{Mehrwertige und zusammengesetzte Attribute}}	
+	Hierfür im relationalen Datenmodell keine Entsprechung.
+	\abs
+	Diese Attribute in atomare Attribute auflösen: 
+	\begin{itemize}
+		\item Zusammengesetzte Attribute: Erzeugung mehrerer Attribute im Relationenschema
+		\item Mehrwertige Attribute: Erzeugung eines eigenen Schemas
+	\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\onslide
+\structure{Beispiel für mehrwertige Attribute}
+\begin{columns}
+\begin{column}{0.4\textwidth}
+	\begin{figure}
+		\scalebox{.8} {
+			\begin{tikzpicture}[node distance=2em]
+			\node[entity] (Person) {\small Person}; 
+			\node[attribute] (mnr) [above left=2em of Person] {\key{\small PNr}} edge (Person); 
+			\node[attribute] (name) [above=2em of Person] {\small Name}   edge (Person);
+			\node[multi attribute] (title) [above right=2em of Person] {\small Titel} edge (Person); 
+			\end{tikzpicture}
+		}
+	\end{figure}
+\end{column}
+\pause
+$\Longrightarrow\quad\quad$
+\begin{column}{0.4\textwidth} 
+	\texttt{Person(\key{PNr}, Name)}
+	\nl
+	\texttt{PersTitel(\key{PNr}(FS), \key{Titel})}	
+\end{column}
+\end{columns}
+\abs\abs\abs
+F\"ur das mehrwertige Attribut wird eigenes Relationenschema \texttt{PersTitel} erstellt:
+\begin{itemize}
+\item Prim\"arschl\"ussel ist Kombination aus dem Attribut selbst und dem Prim\"arschl\"ussel der Ursprungsrelation
+\item Prim\"arschl\"ussel der Ursprungsrelation ist Fremdschl\"ussel im neuen Relationenschema
+\end{itemize} 
+\end{frame}
+
+\subsection{Einfache Beziehungen}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\onslide
+\structure{\textbf{(0..1):(0..n)-Beziehungen}}\\[4pt]
+\begin{itemize}
+	\item Entit\"aten erhalten eigenes Schema
+	\item	Beziehung erfordert keine eigene Tabelle
+	\item	Prim\"arschl\"ussel der Tabelle der Entit\"at mit (0..1)-Bezeichnung als Fremdschl\"ussel in Tabelle 
+	der Entit\"at mit (0..n)-Bezeichnung
+\end{itemize}
+\begin{columns}
+	\begin{column}{0.5\textwidth}
+		\begin{figure}
+			\scalebox{.6} {
+				\begin{tikzpicture}[node distance=2em]
+				\node[entity] (Person) {\small Kunde}; 
+				\node[attribute] (mnr) [above left=2em of Person] {\key{\small KNR}} edge (Person); 
+				\node[attribute] (name) [above=2em of Person] {\small Name}   edge (Person);
+				%\node[attribute] (nname) [above right=2em of Person] {\small Nachname}   edge (Person);
+				\node[relationship] (erteilt) [right=of Person] {\small{erteilt}} edge  node[auto,swap] {0..1} (Person); 
+				\node[entity] (auftrag) [right=of erteilt]  {\small{Auftrag}} edge  node[auto,swap] {0..n}(erteilt);
+				\node[attribute] (profnr) [above=of auftrag] {\small{\key{ANR}}} edge (auftrag);
+				\node[attribute] (profname) [above right=of auftrag] {\small{Datum}} edge (auftrag);
+				\end{tikzpicture}
+			}
+		\end{figure}		
+	\end{column}
+	\pause
+	\begin{column}{0.45\textwidth}
+		Relationenschema:\\
+		\texttt{Kunde(\key{KNR},Name)}\\
+		\texttt{Auftrag(\key{ANR},KNR(F),Datum)}
+	\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\structure{\textbf{(0..1):(0..n)-Beziehungen}}\\[4pt]
+\structure{Konkrete Abbildung der beiden Relationen}
+\begin{columns}
+\begin{column}{.48\textwidth}
+	\begin{center}
+		\begin{tabular}{|c|c|}\hline
+			\multicolumn{2}{|c|}{\small \textbf{Kunde}}\\\hline\hline
+			\cellcolor{Green}\small \textbf{\key{KNR}} & \small \textbf{Name} \\\hline 
+			\cellcolor{Green}\small 1 &\small Musterfrau \\\hline 
+			\cellcolor{Green}\small 2 &\small  Mustermann  \\\hline 
+			\cellcolor{Green}\small 3 &\small  Fritsche  \\\hline 
+			\cellcolor{Green}$\cdots$ & $\cdots$  \\\hline
+		\end{tabular}
+	\end{center}
+\end{column}	
+\begin{column}{.48\textwidth}
+	\begin{center}
+		\begin{tabular}{|c|c|c|}\hline
+			\multicolumn{3}{|c|}{\small \textbf{Auftrag}}\\\hline\hline
+			\cellcolor{Green}\small \textbf{\key{ANR}} & \cellcolor{Yellow}\small \textbf{KNR} (F) & \small \textbf{Datum}  \\\hline 
+			\cellcolor{Green}\small 1001 &\cellcolor{Yellow}\small 1 &\small 02.01.2013 \\\hline 
+			\cellcolor{Green}\small 1002 &\cellcolor{Yellow}\small 2 &\small  04.05.2013  \\\hline 
+			\cellcolor{Green}\small 1003 &\cellcolor{Yellow}\small 2 &\small  03.01.2014  \\\hline 
+			\cellcolor{Green}$\cdots$ & \cellcolor{Yellow}$\cdots$ & $\cdots$  \\\hline
+		\end{tabular}
+	\end{center}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\onslide
+\structure{\textbf{1:(0..n)-Beziehungen}}\\[4pt]
+\begin{itemize}
+	\item Entit\"aten erhalten eigenes Schema
+	\item	Beziehung erfordert keine eigene Tabelle
+	\item	Prim\"arschl\"ussel der Tabelle der Entit\"at mit 1-Bezeichnung als Fremdschl\"ussel in Tabelle 
+	der Entit\"at mit (0..n)-Bezeichnung
+	\item Fremdschl\"ussel \texttt{non-null}
+\end{itemize}
+\begin{columns}
+	\begin{column}{0.5\textwidth}
+		\begin{figure}
+			\scalebox{.6} {
+				\begin{tikzpicture}[node distance=2em]
+				\node[entity] (Person) {\small Kunde}; 
+				\node[attribute] (mnr) [above left=2em of Person] {\key{\small KNR}} edge (Person); 
+				\node[attribute] (name) [above=2em of Person] {\small Name}   edge (Person);
+				%\node[attribute] (nname) [above right=2em of Person] {\small Nachname}   edge (Person);
+				\node[relationship] (erteilt) [right=of Person] {\small{erteilt}} edge  node[auto,swap] {1} (Person); 
+				\node[entity] (auftrag) [right=of erteilt]  {\small{Auftrag}} edge  node[auto,swap] {0..n}(erteilt);
+				\node[attribute] (profnr) [above=of auftrag] {\small{\key{ANR}}} edge (auftrag);
+				\node[attribute] (profname) [above right=of auftrag] {\small{Datum}} edge (auftrag);
+				\end{tikzpicture}
+			}
+		\end{figure}		
+	\end{column}
+	\pause
+	\begin{column}{0.45\textwidth}
+		Relationenschema:\\
+		\texttt{Kunde(\key{KNR},Vorname,Nachname)}\\
+		\texttt{Auftrag(\key{ANR},KNR(F,nn),Datum)}
+	\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\onslide
+\structure{\textbf{1:(0..1)-Beziehungen}}\\[4pt]
+\begin{itemize}
+	\item Entit\"aten erhalten eigenes Schema
+	\item	Beziehung erfordert keine eigene Tabelle
+	\item	Prim\"arschl\"ussel der Tabelle der Entit\"at mit 1-Bezeichnung als Fremdschl\"ussel in Tabelle 
+	der Entit\"at mit (0..1)-Bezeichnung
+	\item Fremdschl\"ussel \texttt{non-null} und \texttt{unique}
+\end{itemize}
+\begin{columns}
+	\begin{column}{0.5\textwidth}
+		\begin{figure}
+			\scalebox{.6} {
+				\begin{tikzpicture}[node distance=2em]
+				\node[entity] (Person) {\small Kunde}; 
+				\node[attribute] (mnr) [above left=2em of Person] {\key{\small KNR}} edge (Person); 
+				\node[attribute] (name) [above=2em of Person] {\small Name}   edge (Person);
+				%\node[attribute] (nname) [above right=2em of Person] {\small Nachname}   edge (Person);
+				\node[relationship] (erteilt) [right=of Person] {\small{erteilt}} edge  node[auto,swap] {1} (Person); 
+				\node[entity] (auftrag) [right=of erteilt]  {\small{Auftrag}} edge  node[auto,swap] {0..1}(erteilt);
+				\node[attribute] (profnr) [above=of auftrag] {\small{\key{ANR}}} edge (auftrag);
+				\node[attribute] (profname) [above right=of auftrag] {\small{Datum}} edge (auftrag);
+				\end{tikzpicture}
+			}
+		\end{figure}		
+	\end{column}
+	\pause
+	\begin{column}{0.45\textwidth}
+		Relationenschema:\\
+		\texttt{Kunde(\key{KNR},Vorname,Nachname)}\\
+		\texttt{Auftrag(\key{ANR},KNR(F,nn,u),Datum)}
+	\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\onslide
+\structure{\textbf{(0..1):(0..1)-Beziehungen}}\\[4pt]
+\begin{itemize}
+	\item Entit\"aten erhalten eigenes Schema
+	\item	Beziehung erfordert keine eigene Tabelle
+	\item	Prim\"arschl\"ussel der Tabelle einer der Entit\"aten als Fremdschl\"ussel in Tabelle 
+	der anderen Entit\"at
+	\item Fremdschl\"ussel \texttt{unique}
+\end{itemize}
+\begin{columns}
+	\begin{column}{0.5\textwidth}
+		\begin{figure}
+			\scalebox{.6} {
+				\begin{tikzpicture}[node distance=2em]
+				\node[entity] (Person) {\small Kunde}; 
+				\node[attribute] (mnr) [above left=2em of Person] {\key{\small KNR}} edge (Person); 
+				\node[attribute] (name) [above=2em of Person] {\small Name}   edge (Person);
+				%\node[attribute] (nname) [above right=2em of Person] {\small Nachname}   edge (Person);
+				\node[relationship] (erteilt) [right=of Person] {\small{erteilt}} edge  node[auto,swap] {0..1} (Person); 
+				\node[entity] (auftrag) [right=of erteilt]  {\small{Auftrag}} edge  node[auto,swap] {0..1}(erteilt);
+				\node[attribute] (profnr) [above=of auftrag] {\small{\key{ANR}}} edge (auftrag);
+				\node[attribute] (profname) [above right=of auftrag] {\small{Datum}} edge (auftrag);
+				\end{tikzpicture}
+			}
+		\end{figure}		
+	\end{column}
+	\pause
+	\begin{column}{0.45\textwidth}
+		Relationenschema:\\
+		\texttt{Kunde(\key{KNR},Vorname,Nachname)}\\
+		\texttt{Auftrag(\key{ANR},KNR(F,u),Datum)}
+	\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\onslide
+\structure{\textbf{(0..n):(0..m)-Beziehungen}}\\[4pt]
+\begin{itemize}
+	\item Entit\"aten erhalten eigenes Schema
+	\item Beziehung wird zu eigenem Schema
+	\begin{itemize}
+		\item Der Prim\"arschl\"ussel besteht aus den Prim\"arschl\"usseln der Schemata der Entit\"aten
+		\item Die Prim\"arschl\"ussel der Schemata der Entit\"aten sind Fremdschl\"ussel
+		\item Ggf.~Attribute der Beziehung in das Schema der Beziehung aufnehmen
+	\end{itemize}
+\end{itemize}
+\pause
+\begin{columns}
+	\begin{column}{0.5\textwidth}
+		\begin{figure}
+			\scalebox{.6} {
+				\begin{tikzpicture}[node distance=2em]
+				\node[entity] (Person) {\small Person}; 
+				\node[attribute] (mnr) [above left=2em of Person] {\key{\small PNr}} edge (Person); 
+				\node[attribute] (name) [above=2em of Person] {\small Name}   edge (Person);
+				\node[relationship] (besitzt) [right=of Person] {\small{arbeitet an}} edge  node[auto,swap] {0..m} (Person); 
+				\node[entity] (fuehrer) [right=of besitzt]  {\small{Projekt}} edge  node[auto,swap] {0..n} (besitzt);
+				\node[attribute] (profnr) [above=of fuehrer] {\small{\key{ProNr}}} edge (fuehrer);
+				\node[attribute] (profname) [above right=of fuehrer] {\small{Thema}} edge (fuehrer);
+				\end{tikzpicture}
+			}
+		\end{figure}		
+	\end{column}
+	\begin{column}{0.35\textwidth}
+		\small
+		Relationenschema:\\
+		\texttt{Person(\key{PNR},Name)}\\
+		\texttt{Projekt(\key{ProNr},Thema)}\\
+		\texttt{Arbeitet\_An(\key{PNR}(F),\key{ProNr}(F))}
+	\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\onslide
+\structure{\textbf{(0..n):(0..m)-Beziehungen}}\\[4pt]
+ \begin{columns}
+	\begin{column}{.33\textwidth}
+		\begin{center}
+			\begin{tabular}{|c|c|}\hline
+				\multicolumn{2}{|c|}{\small \textbf{Person}}\\\hline\hline
+				\cellcolor{Green}\small \textbf{\key{PNR}} & \small \textbf{Name}  \\\hline 
+				\cellcolor{Green}\small 1 &\small Mustermann \\\hline 
+				\cellcolor{Green}\small 2 & \small Musterfrau  \\\hline 
+				\cellcolor{Green}\small 3 & \small Fritsch   \\\hline 
+				\cellcolor{Green}$\cdots$ & $\cdots$ \\\hline
+			\end{tabular}
+		\end{center}
+	\end{column}	
+	\begin{column}{.33\textwidth}
+		\begin{center}
+			\begin{tabular}{|c|c|}\hline
+				\multicolumn{2}{|c|}{\small \textbf{Arbeitet\_An}}\\\hline\hline
+				\cellcolor{Green}\small \textbf{\key{PNR}(F)} & \cellcolor{Green}\small \textbf{\key{ProNr}(F)}  \\\hline 
+				\cellcolor{Green}\small 1 &\cellcolor{Green}\small 1001 \\\hline 
+				\cellcolor{Green}\small 1 &\cellcolor{Green}\small 1002 \\\hline 
+				\cellcolor{Green}\small 2 &\cellcolor{Green}\small 1002 \\\hline 
+				\cellcolor{Green}\small 2 &\cellcolor{Green}\small 1001 \\\hline 				
+			\end{tabular}
+		\end{center}
+	\end{column}	
+	\begin{column}{.33\textwidth}
+		\begin{center}
+			\begin{tabular}{|c|c|}\hline
+				\multicolumn{2}{|c|}{\small \textbf{Projekt}}\\\hline\hline
+				\cellcolor{Green}\small \textbf{\key{ProNr}} & \small \textbf{Thema}  \\\hline 
+				\cellcolor{Green}\small 1001 &\small Entwicklung \\\hline 
+				\cellcolor{Green}\small 1002 &\small Marketing \\\hline 
+				\cellcolor{Green}\small 1003 &\small Innovation \\\hline 
+				\cellcolor{Green}$\cdots$ & $\cdots$  \\\hline
+			\end{tabular}
+		\end{center}
+	\end{column}
+\end{columns}
+\vspace{5mm}
+Relation \texttt{Arbeitet\_An} hat Fremdschl\"ssel auf Relationen der Entit\"aten.\\
+Kombination dieser Fremdschl\"ussel ist Prim\"arschl\"ussel von Relation \texttt{Arbeitet\_An}.\\
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\structure{\textbf{1:1-Beziehungen}}\\[4pt]
+\structure{Zwei Alternativen:}\\[2pt]
+\begin{enumerate}
+	\item Beide Entit\"aten werden in einem Relationenschema identifiziert
+	\item Jede Entit\"at hat ihr eigenes Relationenschema
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\onslide
+\structure{\textbf{1:1-Beziehungen} -- Alternative 1}\\[4pt]
+\begin{itemize}
+\item Ein Relationenschema
+\item Prim\"arschl\"ussel identifiziert eine der beiden Entit\"aten.
+\item Zus\"atzliches \texttt{non-null}, unique Attribut identifiziert zweite Entit\"at
+\end{itemize}
+\pause
+\structure{Beispiel:}
+\begin{figure}
+\scalebox{.6} {
+	\begin{tikzpicture}[node distance=2em]
+	\node[entity] (Person) {\small Person}; 
+	\node[attribute] (mnr) [above left=2em of Person] {\key{\small PNr}} edge (Person); 
+	\node[attribute] (name) [above=2em of Person] {\small Name}   edge (Person);
+	\node[relationship] (besitzt) [right=of Person] {\small{besitzt}} edge  node[auto,swap] {1} (Person); 
+	\node[entity] (aws) [right=of besitzt]  {\small{Ausweis}} edge  node[auto,swap] {1} (besitzt);
+	\node[attribute] (profnr) [above=of aws] {\small{\key{ANr}}} edge (aws);
+	\node[attribute] (profname) [above right=of aws] {\small{PLZ}} edge (aws);
+	\end{tikzpicture}
+}  
+\end{figure}		
+\hspace*{8.5em}\texttt{PersonAusweis(\key{PNr},ANr(nn,u),Name,PLZ)}
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\onslide
+\structure{\textbf{1:1-Beziehungen} -- Alternative 2}\\[4pt]
+\begin{itemize}
+\item Jede Entit\"at erh\"alt eigenes Schema
+\item Prim\"arschl\"ussel der beiden Tabellen sind jeweils Fremdschl\"ussel in der anderen Tabelle
+\item Fremdschl\"ussel sind \texttt{non-null}
+\end{itemize}
+\pause
+\structure{Beispiel:}
+\begin{columns}
+\begin{column}{0.55\textwidth}
+\begin{figure}
+	\scalebox{.6} {
+		\begin{tikzpicture}[node distance=2em]
+		\node[entity] (Person) {\small Person}; 
+		\node[attribute] (mnr) [above left=2em of Person] {\key{\small PNr}} edge (Person); 
+		\node[attribute] (name) [above=2em of Person] {\small Name}   edge (Person);
+		\node[relationship] (besitzt) [right=of Person] {\small{besitzt}} edge  node[auto,swap] {1} (Person); 
+		\node[entity] (aws) [right=of besitzt]  {\small{Ausweis}} edge  node[auto,swap] {1} (besitzt);
+		\node[attribute] (profnr) [above=of aws] {\small{\key{ANr}}} edge (aws);
+		\node[attribute] (profname) [above right=of aws] {\small{PLZ}} edge (aws);
+		\end{tikzpicture}
+	}  
+\end{figure}		
+\end{column}
+\begin{column}{0.4\textwidth}
+\texttt{Person(\key{PNr},ANr(F,nn),Name)}\\
+\texttt{Ausweis(\key{ANr},PNr(F,nn),PLZ)}
+\end{column}
+\end{columns}
+\pause
+\abs
+\centering\textbf{VORSICHT Deadlock!}
+%
+% Lösung: Setze beide Foreign-Key Constraints auf <deferrable> / <deferred>
+%         Dadurch können beide Inserts/Delets/Updates konsistent in (nach Abarbeitung) 
+%         einer Transaktion durgeführt werden.
+%
+\end{frame}
+
+\subsection{Schwache Entit\"aten}
+
+\againframe<3>{weakentity}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\onslide
+{\structure{\textbf{Schwache Beziehungen}\\[4pt]}}
+\begin{figure}
+	\scalebox{.7}{
+		\begin{tikzpicture}[node distance=2em]
+		\node[entity] (geb) {\small Geb\"aude}; 
+		\node[attribute] (gnr) [above left=2em of geb] {\key{\small GNR}} edge (geb); 
+		\node[attribute] (ort) [above=2em of geb] {\small Name} edge (geb);
+		\node[ident relationship] (besitzt) [right=of geb] {\small{besitzt}} edge node[auto,swap] {1} (geb); 
+		\node[weak entity] (raum) [right=of besitzt]  {\small{Raum}} edge [total] node[auto,swap] {n} (besitzt); 
+		\node[attribute] (rnr) [above=of raum] {\small{RNR}} edge (raum);
+		\node[attribute] (profname) [above right=of raum] {\small{Groesse}} edge (raum);
+		\end{tikzpicture}}
+\end{figure}		
+\pause[3]
+\hspace*{8em}\texttt{Gebäude(\key{GNR},Name)}
+\hspace*{2em}\texttt{Raum(\key{GNR}(F),\key{RNR},Groesse)}
+\pause[2]
+\abs
+\begin{itemize}
+	\item F\"ur beide Entit\"atstypen wird Relationenschema erzeugt.
+	\item Prim\"arschl\"ussel im schwachen Schema besteht aus Fremdschl"ussel zum Eigent\"umerschema und 
+	entit\"ats-differenzierendem Attribut
+\end{itemize}
+\end{frame}
+
+\subsection{Beziehungen h\"oheren Grades}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\onslide
+\structure{\textbf{Beziehungen vom Grad $n > 2$}}\\[4pt]
+\structure{Beispiel}\\[-20pt]
+\begin{columns}
+	\begin{column}{.5\textwidth}
+		\begin{figure}
+			\scalebox{.6}{
+				\begin{tikzpicture}[node distance=2em]
+				\node[entity] (Professor) {\small Professor}; 
+				\node[attribute] (pnr) [below left=of Professor] {\small{\key{PNR}}} edge (Professor);
+				\node[relationship] (liest) [right=of Professor] {\small{betreut}} edge node[auto,swap] {0..1}  (Professor); 
+				\node[entity] (Vorlesung) [right=of liest]  {\small{Student}} edge node[auto,swap] {0..n}  (liest);
+				\node[attribute] (vnr) [below right=of Vorlesung] {\small{\key{SNR}}} edge (Vorlesung);
+				\node[entity] (thm) [below=of liest] {\small{Thema}} edge node[auto,swap] {0..m} (liest); 
+				%\node[attribute] (datum) [below left=of liest] {\small{{Note}}} edge (liest);
+				\node[attribute] (rnr) [right=of thm] {\small{\key{TNR}}} edge (thm);
+				\end{tikzpicture}
+			}
+		\end{figure}		
+	\end{column}
+	\pause[3]
+	\begin{column}{.38\textwidth}	
+		\small{\\[10pt]\texttt{Student(\key{SNR},...)}\\
+			\texttt{Thema(\key{TNR},...)} \\
+			\texttt{Professor(\key{PNR},...)}\\
+			\texttt{Betreuen(\key{SNR}(F),\key{TNR}(F),PNR(F))}}
+	\end{column}
+\end{columns}
+\pause[2]
+\abs
+\begin{itemize}
+	\item Schema f\"ur jede Entit\"at und f\"ur die Beziehung
+	\item Prim\"arschl\"ussel der Entit\"atschemata sind Fremdschlüssel im Beziehungsschema
+	\item Prim\"arschl\"ussel des Beziehungsschemas besteht aus Prim\"arschlüsseln der Entit\"atschemata mit $(0..n)$-Bezeichnung 		
+	%\item Weiterhin beinhaltet Schema des Beziehungstyps dessen Attribute
+\end{itemize}
+\end{frame}
+
+\subsection{Is-A-Beziehungen}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\structure{Is-A-Beziehungen (vgl. Folie \ref{isarelation}) müssen besonders betrachtet werden}
+\begin{figure}\scalebox{0.8}{
+	\begin{tikzpicture}[node distance=2em]
+	\node[entity] (Auto) {\small Auto}; 
+	\node[isa] (ist) [right=of Auto] {\small{is a}} edge (Auto); 
+	\node[entity] (fahrzeug) [right=of ist]  {\small{Fahrzeug}} edge  (ist);
+	\end{tikzpicture}}
+\end{figure}
+Die Entitäten können als Klassen in einem objektorientierten Modell aufgefasst werden. 
+\abs
+Mögliche Ansätze: 
+\begin{itemize}
+\item \emph{One Table per Class Hierarchy}
+\item \emph{One Table per Concrete Class}
+\item \emph{One Table per Class}
+\end{itemize}
+\end{frame}
+
+\begin{frame}<1>[label=isa]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}
+\only<1>{\structure{Beispiel:}}
+\only<2>{\structure{Wiederholung von Folie \ref{isa}:}}
+\begin{figure}\scalebox{.8} {
+\begin{tikzpicture}[node distance=2em]
+\node[entity] (Person) {\small Person}; 
+\node[attribute] (pnr) [right=of Person] {\small{PNR}} edge (Person);
+\node[attribute] (geb) [left=of Person] {\small{Name}} edge (Person);
+\node[isa] (ist) [below=of Person] {\small{is a}} edge (Person); 
+\node[entity] (Kunde) [below right=of ist]  {\small{Kunde}} edge  (ist);
+\node[attribute] (knr) [above right=of Kunde] {\small{KNR}} edge (Kunde);
+\node[attribute] (cat) [below right=of Kunde] {\small{Kategorie}} edge (Kunde);
+\node[entity] (Mitarbeiter) [below left=of ist] {\small{Mitarbeiter}} edge (ist);
+\node[attribute] (mnr) [below left=of Mitarbeiter] {\small{MNR}} edge (Mitarbeiter);
+\node[attribute] (login) [above left=of Mitarbeiter] {\small{Login}} edge (Mitarbeiter);
+\end{tikzpicture}}
+\end{figure}
+\end{frame}
+
+\begin{frame}[t]\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\onslide
+\structure{\textbf{Is-A-Beziehung} -- One Table per Class Hierarchy}\\[4pt]
+\begin{itemize}
+\item Die Attribute aller Entit\"aten der Klassenhierarchie in ein gemeinsames Relationenschema 
+\item Unterscheidung der Entit\"aten durch ein Diskriminator-Attribut	
+\end{itemize}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|}\hline
+\multicolumn{7}{|c|}{\small \textbf{Personen}}\\\hline\hline
+\small \textbf{\key{PNR}} & \textbf{\small Name}&\small \textbf{MNR}&\textbf{Login} &\small \textbf{KNR}&\small \textbf{Kategorie}&\small\textbf{Typ} \\\hline 
+\small 1 &\small Mustermann & \small  &\small  &\small 1001 &\small A-Kunde & K\\\hline 
+\small 2 &\small Musterfrau & \small 13  &\small emfr &\small  &\small & M \\\hline 
+\small 3 &\small Schneider & \small 14  &\small schn  &\small 1002 &\small B-Kunde&B \\\hline 
+\end{tabular}
+\end{center}
+\pause
+\begin{itemize}
+\item Attribut \texttt{Typ} dient der Unterscheidung zwischen Mitarbeiter (M), Kunde (K), beides (B).
+\item Ansatz einfach zu implementieren, provoziert jedoch \texttt{null}-Werte und wird f\"ur komplexere Hierarchien schwer wartbar.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\onslide
+\structure{\textbf{Is-A-Beziehung} -- One Table per Concrete Class}\\[4pt]
+\structure{Alle konkreten Klassen werden in eigenem Relationenschema abgebildet.}
+\begin{center}
+\begin{tabular}{|c|c|c|c|}\hline
+\multicolumn{4}{|c|}{\small \textbf{Mitarbeiter}}\\\hline\hline
+\small \textbf{\key{PNR}} & \textbf{\small Name}&\small \textbf{MNR}&\textbf{Login} \\\hline 
+\small 2 &\small Musterfrau & \small 13  &\small emfr  \\\hline 
+\small 3 &\small Schneider & \small 14  &\small schn  \\\hline 
+\end{tabular}
+\hspace{3mm}
+\begin{tabular}{|c|c|c|c|}\hline
+\multicolumn{4}{|c|}{\small \textbf{Kunde}}\\\hline\hline
+\small \textbf{\key{PNR}} & \textbf{\small Name}&\small \textbf{KNR}&\textbf{Kategorie} \\\hline 
+\small 1 &\small Mustermann & \small 1001  &\small A-Kunde  \\\hline 
+\small 3 &\small Schneider & \small 1002  &\small B-Kunde  \\\hline 
+\end{tabular}
+\end{center}
+\pause
+\begin{itemize}
+\item Ansatz leicht zu implementieren
+\item \texttt{PNR} muss Eindeutigkeit über alle Relationen garantieren (Art Prim\"arschl\"ussel)
+\item Es fehlen Ableitungsinformationen, da keine \texttt{Person} existiert	
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t]
+\frametitle{\insertsection}
+\framesubtitle{\insertsubsection}    
+\onslide
+\structure{\textbf{Is-A-Beziehung} -- One Table per Class}\\[4pt]
+\structure{Alle Klassen (auch die abstrakten) werden in eigenem Relationenschema abgebildet.}
+\begin{center}
+\begin{tabular}{|c|c|}\hline
+\multicolumn{2}{|c|}{\small \textbf{Person}}\\\hline\hline
+\small \textbf{\key{PNR}} & \textbf{\small Name} \\\hline 
+\small 1 &\small Mustermann  \\\hline  
+\small 2 &\small Musterfrau  \\\hline 
+\small 3 &\small Schneider  \\\hline 
+\end{tabular}
+\hspace{3mm}
+\begin{tabular}{|c|c|c|}\hline
+\multicolumn{3}{|c|}{\small \textbf{Mitarbeiter}}\\\hline\hline
+\small \textbf{\key{PNR}(F)} & \small \textbf{MNR}&\textbf{Login} \\\hline 
+\small 2 & \small 13  &\small emfr  \\\hline 
+\small 3 & \small 14  &\small schn  \\\hline 
+\end{tabular}
+\hspace{3mm}
+\begin{tabular}{|c|c|c|}\hline
+\multicolumn{3}{|c|}{\small \textbf{Kunde}}\\\hline\hline
+\small \textbf{\key{PNR}(F)} & \small \textbf{KNR}&\textbf{Kategorie} \\\hline 
+\small 1 & \small 1001  &\small A-Kunde  \\\hline 
+\small 3 & \small 1002  &\small B-Kunde  \\\hline 
+\end{tabular}
+\end{center}
+\pause
+\begin{itemize}
+\item \texttt{PNR} muss in allen Relationen vorhanden sein - Prim\"ar- und/oder Fremdschl\"ussel
+\item Alle Ableitungsinformationen sind vorhanden
+\item Jedoch erhöhter Aufwand nötig, um die einzelnen Tupel mittels Verbundoperationen zusammenzusetzen
+\end{itemize}
+\end{frame}
+
+\section*{Übungsaufgaben}
+\begin{frame}{\insertsection}
+\begin{alertblock}{Überführen Sie das ER-Modell in ein logisches Datenmodell.}{
+\centering
+\scalebox{.65}{
+\centering 			
+\begin{tikzpicture}[node distance=2em, transform shape]
+\node[entity] (Buch) {\small Buch}; 
+\node[attribute] (b_bid) [above left=2em of Buch] {\key{\small BID}} edge (Buch);  
+\node[attribute] (b_jahr) [left=2em of Buch] {{\small Jahr}} edge (Buch);  
+\node[attribute] (b_titel) [below left=2em of Buch] {{\small Titel}} edge (Buch);  
+
+\node[relationship] (r_be) [right=of Buch] {\small of} edge node [auto, swap] {\small 0..1}(Buch); 
+\node[entity] (Exemplar) [right=of r_be] {\small Exemplar} edge node [auto, swap] {\small 0..n} (r_be); 
+\node[relationship] (r_eapos) [right=of Exemplar] {\small in} edge node [auto,swap] {\small 0..1} (Exemplar); 
+
+
+\node[weak entity] (Ausleihposition) [right= of r_eapos] {\small AuslPos} edge node[auto,swap] {\small 0..m} (r_eapos); 
+\node[attribute] (ap_posnr) [above right=2em of Ausleihposition] {\key{\small PosNr}} edge (Ausleihposition);  
+\node[attribute] (ap_rdatum) [right=2em of Ausleihposition] {{\small Rückdatum}} edge (Ausleihposition);  
+
+\node[ident relationship] (r_auslpos) [below=of Ausleihposition] {\small part} edge [total] node [auto, swap] {\small 0..s} (Ausleihposition); 
+
+\node[entity] (Ausleihe) [below= of r_auslpos] {\small Ausleihe} edge node[auto, swap] {\small 0..1} (r_auslpos);
+\node[attribute] (a_aid) [above right=2em of Ausleihe] {\key{\small AID}} edge (Ausleihe); 
+\node[attribute] (a_datum) [right=2em of Ausleihe] {\key{\small Datum}} edge (Ausleihe);
+
+\node[relationship] (r_writes) [below= of Buch] {\small writes} edge node [auto, swap] {\small 0..p} (Buch); 
+
+\node[entity] (Autor) [below=of r_writes] {\small Autor} edge node [auto,swap] {\small 0..q} (r_writes); 
+\node[attribute] (a_auid) [above left=2em of Autor] {\key{\small AuID}} edge (Autor);  
+\node[attribute] (a_vn) [left=2em of Autor] {{\small Vorname}} edge (Autor);  		
+\node[attribute] (a_nn) [below left=2em of Autor] {{\small Nachname}} edge (Autor);  
+
+
+\node[attribute] (e_id) [above left=2em of Exemplar] {\key{\small EID}} edge (Exemplar);  
+\node[attribute] (e_dat) [above right=2em of Exemplar] {{\small AnschDat}} edge (Exemplar);  
+
+\node[relationship] (r_ka) [left=of Ausleihe] {\small leiht} edge node [auto, swap] {\small 0..r} (Ausleihe); 
+\node[entity] (Kunde) [left=of r_ka] {\small Kunde} edge node [auto, swap] {\small 0..1} (r_ka); 
+
+\node[attribute] (k_id) [above left=2em of Kunde] {\key{\small KID}} edge (Kunde);  		
+\node[attribute] (k_vn) [above =2em of Kunde] {{\small Vorname}} edge (Kunde);  		
+\node[attribute] (k_nn) [above right=2em of Kunde] {{\small Nachname}} edge (Kunde);  					
+\end{tikzpicture}}		
+}
+\end{alertblock}
+\textbf{In welchem Punkt könnte dieses Modell noch verfeinert werden?}
+\end{frame}
+
+\begin{frame}{\insertsection}
+%\framesubtitle{\insertsubsection}
+\begin{alertblock}{Welche Fehler wurden bei der Abbildung ins logische Datenmodell gemacht?}
+{			
+\centering
+\scalebox{.65} {
+\begin{tikzpicture}[node distance=2em, transform shape]
+\node[entity] (Student) {\small A}; 
+\node[attribute] (knr) [above left=2em of Student] {\key{\small U}} edge (Student); 
+\node[attribute] (name) [above=2em of Student] {\small V} edge (Student);
+\node[relationship] (betreut) [right=of Student] {\small{R}} edge node[auto,swap] {0..n} (Student); 
+\node[entity] (prof) [right=of betreut]  {\small{B}} edge node[auto,swap] {0..1} (betreut);
+\node[attribute] (profnr) [above=of prof] {\small{\key{X}}} edge (prof);
+\node[attribute] (profname) [above right=of prof] {\small{Y}} edge (prof);
+\node[attribute] (mnr) [above right=of Student] {\small{W}} edge (Student) ;
+\end{tikzpicture}
+}		
+\abs
+\small\texttt{A(\uline{U},V,W)}\\
+\small\texttt{B(\uline{X},Y,U(F))}\\
+\abs
+\scalebox{.65} {
+\begin{tikzpicture}[node distance=2em, transform shape]
+\node[entity] (Student) {\small Angebotskopf}; 
+\node[attribute] (knr) [above left=2em of Student] {\key{\small ANr}} edge (Student); 
+\node[attribute] (name) [above=2em of Student] {\small Kunde} edge (Student);
+\node[ident relationship] (betreut) [right=of Student] {\small{hat}} edge node[auto,swap] {0..1} (Student); 
+\node[weak entity] (prof) [right=of betreut]  {\small{Position}} edge [total] node[auto,swap] {0..n} (betreut);
+\node[attribute] (profnr) [above=of prof] {\small{\key{PosNr}}} edge (prof);
+\node[attribute] (profname) [above right=of prof] {\small{PosText}} edge (prof);
+\node[attribute] (mnr) [above right=of Student] {\small{Datum}} edge (Student) ;
+\end{tikzpicture}
+}
+\abs
+\small\texttt{Angebotskopf(\uline{ANr},Kunde,Datum)}\\
+\small\texttt{Position(\uline{PosNr},PosText)}\\
+}
+\end{alertblock}	
+\end{frame}
